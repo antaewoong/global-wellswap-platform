@@ -7,7 +7,7 @@ const WellSwapGlobalPlatform = () => {
   const [currentPage, setCurrentPage] = useState('home');
   const [language, setLanguage] = useState('en');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<{email: string, role: string} | null>(null);
   const [connectedAccount, setConnectedAccount] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -383,15 +383,7 @@ const WellSwapGlobalPlatform = () => {
     }
   };
 
-  const getTranslations = (lang: string) => {
-  switch(lang) {
-    case 'ko': return translations.ko;
-    case 'zh': return translations.zh;
-    case 'ja': return translations.ja;
-    default: return translations.en;
-  }
-};
-const t = getTranslations(language);
+  
 
   // Global Insurance Companies (Top 30 in Hong Kong market)
   const globalInsurers = [
