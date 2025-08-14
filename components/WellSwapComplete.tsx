@@ -383,7 +383,7 @@ const WellSwapGlobalPlatform = () => {
     }
   };
 
-  const t = translations[language];
+  const t = translations[language] || translations.en;
 
   // Global Insurance Companies (Top 30 in Hong Kong market)
   const globalInsurers = [
