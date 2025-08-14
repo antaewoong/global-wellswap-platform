@@ -650,8 +650,8 @@ class InsuranceMathAIEngine {
       let transferValue = dividendAdjustedValue * (1 + transferPremium);
       
       // 7. Unknown 보험사 추가 할인 적용
-      if (isUnknownInsurer && insurer.discountRate) {
-        const unknownDiscount = insurer.discountRate;
+      if (isUnknownInsurer && 'discountRate' in insurer) {
+  const unknownDiscount = (insurer as any).discountRate;
         transferValue = transferValue * (1 - unknownDiscount);
         console.log(`🔻 Applied unknown insurer discount: ${(unknownDiscount * 100).toFixed(1)}%`);
       }
