@@ -397,9 +397,9 @@ const WellSwapGlobalPlatform = () => {
   ];
 
   const productCategories = [
-    t.savingsPlan, t.pensionPlan, t.investmentLinked, t.wholeLife, 
-    t.endowmentPlan, t.annuity, t.medicalInsurance, t.termLife
-  ];
+  'Savings Plan', 'Pension Plan', 'Investment Linked', 'Whole Life',
+  'Endowment Plan', 'Annuity', 'Medical Insurance', 'Term Life'
+];
 
   const contractPeriods = [
     t.period2, t.period3, t.period5, t.period10, t.period15, 
