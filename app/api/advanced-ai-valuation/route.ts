@@ -698,7 +698,7 @@ class InsuranceMathAIEngine {
         method: isUnknownInsurer ? 'actuarial_mathematics_ai_unknown_discount' : 'actuarial_mathematics_ai',
         ...(isUnknownInsurer && { 
           unknownInsurerInfo: {
-            discountApplied: `${(insurer.discountRate! * 100).toFixed(1)}%`,
+            discountApplied: `${((insurer as any).discountRate || 0.1) * 100}%`,
             basedOnIndustryAverage: true,
             riskAdjustment: 'Higher risk grade applied'
           }
