@@ -29,7 +29,7 @@ export default function ContractTest() {
       })
     } catch (error) {
       console.error('Contract test failed:', error)
-      setResult({ error: error.message })
+      setResult({ error: error instanceof Error ? error.message : 'Unknown error occurred' })
     } finally {
       setLoading(false)
     }
