@@ -696,13 +696,13 @@ class InsuranceMathAIEngine {
           expectedReturn: Math.round(expectedReturn * 10000) / 100 // 퍼센트로 표시
         },
         method: isUnknownInsurer ? 'actuarial_mathematics_ai_unknown_discount' : 'actuarial_mathematics_ai',
-        ...(isUnknownInsurer && { 
-          unknownInsurerInfo: {
-            discountApplied: `${((insurer as any).discountRate || 0.1) * 100}%`,
-            basedOnIndustryAverage: true,
-            riskAdjustment: 'Higher risk grade applied'
-          }
-        })
+   //     ...(isUnknownInsurer && { 
+   //       unknownInsurerInfo: {
+   //         discountApplied: `${((insurer as any).discountRate || 0.1) * 100}%`,
+   //         basedOnIndustryAverage: true,
+   //         riskAdjustment: 'Higher risk grade applied'
+   //       }
+   //     })
       };
       
       console.log('✅ Final result:', result);
