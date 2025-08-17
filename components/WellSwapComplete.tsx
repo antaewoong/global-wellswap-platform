@@ -209,7 +209,7 @@ const WellSwapGlobalPlatform = () => {
       wallet: '连接钱包',
       
       // Main Content
-      mainTitle: '韦尔斯互换',
+      mainTitle: '韦尔斯云换',
       mainSubtitle: '全球保险资产交易',
       description: '面向香港、新加坡和国际市场的AI驱动保险资产交易平台',
       getStarted: '开始使用',
@@ -383,7 +383,8 @@ const WellSwapGlobalPlatform = () => {
     }
   };
 
-  
+  // 현재 언어에 맞는 번역 객체 가져오기
+  const t = translations[language];
 
   // Global Insurance Companies (Top 30 in Hong Kong market)
   const globalInsurers = [
@@ -397,9 +398,9 @@ const WellSwapGlobalPlatform = () => {
   ];
 
   const productCategories = [
-  'Savings Plan', 'Pension Plan', 'Investment Linked', 'Whole Life',
-  'Endowment Plan', 'Annuity', 'Medical Insurance', 'Term Life'
-];
+    'Savings Plan', 'Pension Plan', 'Investment Linked', 'Whole Life',
+    'Endowment Plan', 'Annuity', 'Medical Insurance', 'Term Life'
+  ];
 
   const contractPeriods = [
     t.period2, t.period3, t.period5, t.period10, t.period15, 
