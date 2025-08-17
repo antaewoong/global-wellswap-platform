@@ -1,5 +1,12 @@
 'use client';
-
+// 🔗 컨트랙트 연동 임포트 추가
+import { 
+  useWeb3, 
+  useAssetRegistration, 
+  useAIEvaluation, 
+  useTrading, 
+  useContractData 
+} from './ContractIntegration';
 import React, { useState, useEffect } from 'react';
 import { Camera, Upload, User, Menu, X, Wallet, ArrowRight, Globe, MessageSquare, BarChart3, TrendingUp, Shield, CheckCircle2, AlertCircle, Clock, DollarSign } from 'lucide-react';
 
