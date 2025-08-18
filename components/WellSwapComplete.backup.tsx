@@ -7,10 +7,10 @@ import {
   useTrading, 
   useContractData 
 } from './ContractIntegration';
+import React, { useState, useEffect } from 'react';
 import { Camera, Upload, User, Menu, X, Wallet, ArrowRight, Globe, MessageSquare, BarChart3, TrendingUp, Shield, CheckCircle2, AlertCircle, Clock, DollarSign } from 'lucide-react';
 import ReliabilityScore from './reliability/ReliabilityScore';
 import fulfillmentAPI from '../lib/fulfillment-api';  // 이 줄 추가
-import React, { useState, useEffect, useRef } from 'react';
 
 const WellSwapGlobalPlatform = () => {
   const [currentPage, setCurrentPage] = useState('home');
@@ -19,11 +19,6 @@ const WellSwapGlobalPlatform = () => {
   const [user, setUser] = useState<{email: string, role: string} | null>(null);
   const [connectedAccount, setConnectedAccount] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-const [isUsingCamera, setIsUsingCamera] = useState(false);
-const videoRef = useRef<HTMLVideoElement>(null);
-const canvasRef = useRef<HTMLCanvasElement>(null);
-const [notifications, setNotifications] = useState<NotificationState[]>([]);
 
   // Language Pack
   const translations = {
@@ -818,194 +813,6 @@ Your insurance is now available for global trading!`);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // ===== OCR 관련 함수들 (기존 함수들 아래에 추가) =====
-  
-  // Notification System
-  const addNotification = (message: string, type: 'success' | 'error' | 'warning' | 'info') => {
-    const notification = {
-      id: Date.now().toString(),
-      message,
-      type,
-      timestamp: new Date()
-    };
-    
-    setNotifications(prev => [notification, ...prev.slice(0, 4)]);
-    
-    // Auto-remove after 5 seconds
-    setTimeout(() => {
-      setNotifications(prev => prev.filter(n => n.id !== notification.id));
-    }, 5000);
-  };
-
-  // Camera Functions
-  const startCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { 
-          facingMode: 'environment',
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
-        }
-      });
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        setIsUsingCamera(true);
-      }
-    } catch (error) {
-      console.error('Camera access failed:', error);
-      addNotification('Camera access denied or not available', 'error');
-    }
-  };
-
-  const stopCamera = () => {
-    if (videoRef.current?.srcObject) {
-      const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
-      tracks.forEach(track => track.stop());
-    }
-    setIsUsingCamera(false);
-  };
-
-  const capturePhoto = () => {
-    if (videoRef.current && canvasRef.current) {
-      const canvas = canvasRef.current;
-      const video = videoRef.current;
-      
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      
-      const ctx = canvas.getContext('2d');
-      ctx?.drawImage(video, 0, 0);
-      
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const file = new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' });
-          setSelectedFile(file);
-          stopCamera();
-        }
-      }, 'image/jpeg', 0.8);
-    }
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-    }
-  };
-
-  // OCR Processing
-  const processImage = async () => {
-    if (!selectedFile) return;
-    
-    setIsLoading(true);
-    addNotification('Starting OCR text extraction...', 'info');
-
-    try {
-      const Tesseract = (await import('tesseract.js')).default;
-      
-      const { data: { text } } = await Tesseract.recognize(
-        selectedFile,
-        'eng+kor+chi_sim',
-        {
-          logger: (m) => {
-            if (m.status === 'recognizing text') {
-              console.log(`OCR Progress: ${Math.round(m.progress * 100)}%`);
-            }
-          }
-        }
-      );
-
-      console.log('Extracted text:', text);
-      
-      if (text.trim()) {
-        await analyzeExtractedText(text);
-      } else {
-        addNotification('No text found in image. Please try another image.', 'warning');
-      }
-      
-    } catch (error) {
-      console.error('OCR processing failed:', error);
-      addNotification('OCR processing failed. Please try again.', 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // AI Text Analysis
-  const analyzeExtractedText = async (text: string) => {
-    try {
-      addNotification('Analyzing extracted text...', 'info');
-
-      const extractedData = parseTextWithRegex(text);
-
-      if (extractedData) {
-        autoFillForm(extractedData);
-        addNotification('Insurance information extracted successfully!', 'success');
-      } else {
-        addNotification('Could not extract insurance information. Please fill manually.', 'warning');
-      }
-
-    } catch (error) {
-      console.error('Text analysis failed:', error);
-      addNotification('Text analysis failed. Please fill form manually.', 'error');
-    }
-  };
-
-  // Regex Parser
-  const parseTextWithRegex = (text: string) => {
-    const patterns = {
-      company: /(?:company|insurer|provider)[:\s]*([A-Za-z\s]+)/i,
-      policy: /(?:policy|contract)[:\s#]*([A-Za-z0-9\-]+)/i,
-      premium: /(?:premium|amount)[:\s]*([0-9,]+)/i,
-      currency: /(USD|HKD|CNY|SGD|EUR|GBP)/i,
-      date: /(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/g
-    };
-
-    const extracted: any = {};
-    
-    Object.entries(patterns).forEach(([key, pattern]) => {
-      const match = text.match(pattern);
-      if (match) {
-        extracted[key === 'company' ? 'company_name' : 
-                 key === 'policy' ? 'policy_number' :
-                 key === 'premium' ? 'premium_amount' : key] = match[1]?.trim();
-      }
-    });
-
-    const dates = text.match(patterns.date);
-    if (dates?.length >= 2) {
-      extracted.purchase_date = dates[0];
-      extracted.maturity_date = dates[1];
-    }
-
-    return Object.keys(extracted).length > 0 ? extracted : null;
-  };
-
-  // Auto-fill Form
-  const autoFillForm = (data: any) => {
-    const updates: any = {};
-    
-    if (data.company_name) {
-      const matchedCompany = globalInsurers.find(company => 
-        company.toLowerCase().includes(data.company_name.toLowerCase()) ||
-        data.company_name.toLowerCase().includes(company.toLowerCase())
-      );
-      updates.company = matchedCompany || data.company_name;
-    }
-    
-    if (data.product_name) updates.productName = data.product_name;
-    if (data.premium_amount) updates.annualPayment = data.premium_amount.replace(/[^0-9]/g, '');
-    if (data.purchase_date) {
-      try {
-        const date = new Date(data.purchase_date);
-        updates.startDate = date.toISOString().split('T')[0];
-      } catch {}
-    }
-
-    setInsuranceData(prev => ({ ...prev, ...updates }));
   };
 
   // Page Components
