@@ -635,12 +635,15 @@ const loadListingData = useCallback(async () => {
     console.log('📊 실제 DB에서 리스팅 데이터 로드 (수정된 버전)...')
 
     // 먼저 간단하게 insurance_assets 테이블만 조회
-    const { data: assets, error } = await supabase
-      .from('insurance_assets')
-      .select('*')
-      .eq('status', 'active')
-      .order('created_at', { ascending: false })
-      .limit(50)
+    console.log('🔍 상태 필터: listed로 조회 중...')
+const { data: assets, error } = await supabase
+  .from('insurance_assets')
+  .select('*')
+  .eq('status', 'listed')  // ← 변경
+  .order('created_at', { ascending: false })
+  .limit(50)
+
+console.log('📋 조회 결과:', assets, error)  // ← 추가
 
     if (error) {
       console.error('❌ DB 로드 오류:', error)
@@ -658,18 +661,18 @@ const loadListingData = useCallback(async () => {
     // 실제 테이블 구조에 맞게 데이터 변환
     const formattedData = assets.map((asset: any, index: number) => ({
       id: asset.id || index + 1,
-      company: asset.company || 'Unknown Company',
-      productName: asset.policy_type || asset.company || 'Insurance Product',
-      category: t.savingsPlan, // 기본값
-      surrenderValue: asset.current_value ? Math.round(asset.current_value * 0.8) : 45000,
-      transferValue: asset.current_value ? Math.round(asset.current_value * 0.95) : 52000,
-      platformPrice: asset.current_value || 50000,
-      confidence: 0.85, // 기본값
-      riskGrade: 'A', // 기본값
-      contractPeriod: '10 Years', // 기본값
-      paidPeriod: '5 Years', // 기본값
-      annualPayment: asset.purchase_price || 8000,
-      status: asset.status === 'active' ? 'available' : 'sold',
+      company: asset.company_name || asset.company || 'Unknown Company',  // ← 수정
+      productName: asset.product_name || asset.policy_type || 'Insurance Product',  // ← 수정
+      category: asset.product_category || t.savingsPlan,  // ← 수정
+      surrenderValue: asset.asking_price ? Math.round(asset.asking_price * 0.8) : 45000,  // ← 수정
+      transferValue: asset.asking_price ? Math.round(asset.asking_price * 0.95) : 52000,  // ← 수정
+      platformPrice: asset.asking_price || 50000,  // ← 수정
+      confidence: 0.85,
+      riskGrade: 'A',
+      contractPeriod: `${asset.contract_period_years || 10} Years`,  // ← 수정
+      paidPeriod: `${asset.paid_period_years || 5} Years`,  // ← 수정
+      annualPayment: asset.annual_premium || 8000,  // ← 수정
+      status: asset.status === 'listed' ? 'available' : 'sold',  // ← 수정
       seller: asset.owner_address || 'Unknown',
       listingDate: asset.created_at ? new Date(asset.created_at).toISOString().split('T')[0] : '2025-08-19'
     }))
@@ -731,6 +734,7 @@ const loadListingData = useCallback(async () => {
       // 3. AI 평가 수행
       console.log('🤖 AI 평가 시작...');
       const aiResult = await performAdvancedAIValuation(insuranceData);
+      console.log('✅ AI 평가 완료:', aiResult);
       
       // 4. 사용자 확인
       const userConfirmed = confirm(`
@@ -748,15 +752,21 @@ const loadListingData = useCallback(async () => {
         return;
       }
   
-      // 5. 사용자 확인 및 등록
+      // 5. 사용자 확인 및 등록 (더 자세한 로그 추가)
       let userId;
       try {
+        console.log('👤 사용자 확인 중...', connectedAccount);
         const { data: user, error: userError } = await WellSwapDB.getUserByWallet(connectedAccount);
         
+        if (userError) {
+          console.error('❌ 사용자 조회 오류:', userError);
+        }
+        
         if (user) {
+          console.log('✅ 기존 사용자 발견:', user);
           userId = user.id;
         } else {
-          // 새 사용자 생성
+          console.log('🆕 새 사용자 생성 중...');
           const userData = {
             wallet_address: connectedAccount.toLowerCase(),
             role: 'user',
@@ -764,23 +774,30 @@ const loadListingData = useCallback(async () => {
             total_trades: 0
           };
           
+          console.log('📝 생성할 사용자 데이터:', userData);
           const { data: newUser, error: createError } = await WellSwapDB.createUser(userData);
           
           if (createError) {
-            console.error('User creation error:', createError);
-            userId = `temp_${Date.now()}`;
+            console.error('❌ 사용자 생성 오류:', createError);
+            throw new Error(`사용자 생성 실패: ${createError.message}`);
           } else {
+            console.log('✅ 새 사용자 생성 완료:', newUser);
             userId = newUser?.id;
           }
         }
       } catch (userError) {
-        console.warn('User lookup failed, using temporary ID:', userError);
-        userId = `temp_${Date.now()}`;
+        console.error('💥 사용자 처리 중 오류:', userError);
+        throw new Error(`사용자 처리 실패: ${userError.message}`);
       }
   
-      // 6. 보험 자산 DB에 등록
+      if (!userId) {
+        throw new Error('사용자 ID를 확인할 수 없습니다');
+      }
+  
+      // 6. 보험 자산 DB에 등록 (더 자세한 로그)
+      console.log('🏦 보험 자산 등록 중...');
       const assetData = {
-        owner_id: userId,
+        owner_address: connectedAccount,  // 지갑 주소 사용
         company_name: insuranceData.company,
         product_name: insuranceData.productName,
         product_category: insuranceData.productCategory || 'Life Insurance',
@@ -795,13 +812,18 @@ const loadListingData = useCallback(async () => {
         status: 'listed'
       };
   
+      console.log('📋 등록할 보험 데이터:', assetData);
       const { data: asset, error: assetError } = await WellSwapDB.createInsuranceAsset(assetData);
       
       if (assetError) {
-        throw new Error('Failed to register insurance asset');
+        console.error('❌ 보험 자산 등록 오류:', assetError);
+        throw new Error(`보험 자산 등록 실패: ${assetError.message}`);
       }
   
+      console.log('✅ 보험 자산 등록 완료:', asset);
+  
       // 7. AI 평가 결과 저장
+      console.log('🧠 AI 평가 결과 저장 중...');
       const valuationData = {
         asset_id: asset.id,
         surrender_value: aiResult.surrenderValue,
@@ -814,12 +836,17 @@ const loadListingData = useCallback(async () => {
         analysis_details: aiResult
       };
   
-      await WellSwapDB.saveAIValuation(valuationData);
+      const { error: valuationError } = await WellSwapDB.saveAIValuation(valuationData);
+      if (valuationError) {
+        console.warn('⚠️ AI 평가 저장 실패 (계속 진행):', valuationError);
+      } else {
+        console.log('✅ AI 평가 결과 저장 완료');
+      }
   
       // 8. 성공 처리
       addNotification('✅ Insurance successfully registered!', 'success');
       
-      // 9. 폼 리셋 (성공 시에만)
+      // 9. 폼 리셋
       setInsuranceData({
         company: '',
         productCategory: '',
@@ -836,7 +863,7 @@ const loadListingData = useCallback(async () => {
       await loadListingData();
       
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error('💥 전체 등록 프로세스 오류:', error);
       addNotification(`❌ Registration failed: ${error.message}`, 'error');
     } finally {
       setIsLoading(false);
@@ -1521,11 +1548,34 @@ const loadListingData = useCallback(async () => {
     </div>
   );
 
-    // 컴포넌트 마운트 시 실제 데이터 로드
-    useEffect(() => {
-      console.log('🚀 WellSwap 플랫폼 초기화 - 실제 DB 연동')
-      loadListingData()
-    }, [loadListingData])
+    // 다음으로 교체:
+useEffect(() => {
+  console.log('🚀 WellSwap 플랫폼 초기화 - 실제 DB 연동')
+  
+  // 환경변수 확인
+  console.log('🔍 Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
+  console.log('🔑 Supabase Key 확인:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ 존재함' : '❌ 없음')
+  
+  // 실제 DB 연결 테스트
+  const testConnection = async () => {
+    try {
+      console.log('📡 Supabase 연결 테스트 시작...')
+      const { data, error } = await supabase.from('users').select('count').limit(1)
+      
+      if (error) {
+        console.error('❌ Supabase 연결 실패:', error.message)
+        console.error('❌ 오류 코드:', error.code)
+      } else {
+        console.log('✅ Supabase 연결 성공!', data)
+      }
+    } catch (err) {
+      console.error('💥 연결 테스트 예외:', err)
+    }
+  }
+  
+  testConnection()
+  loadListingData()
+}, [loadListingData])
 
   // Main Render
   return (
