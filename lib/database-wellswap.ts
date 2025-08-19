@@ -1,3 +1,15 @@
+// lib/database-wellswap.ts 파일 상단 수정
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://pecoffojfjcbrfwmaron.supabase.co';
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlY29mZm9qZmpjYnJmd21hcm9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwNTU4NjgsImV4cCI6MjA3MDYzMTg2OH0.Z1IOyinRwos7u8jzETU22a5cgMeCPFQQssOiPrH2vv8';
+
+if (!supabaseUrl) {
+  console.error('NEXT_PUBLIC_SUPABASE_URL is missing');
+}
+
+export const supabase = createClient(supabaseUrl, supabaseKey);
+
 // lib/database-wellswap.ts - 기존 테이블 구조에 맞춘 Database Service
 import { createClient } from '@supabase/supabase-js';
 
