@@ -1,13 +1,14 @@
-import WellSwapPlatform from '../components/WellSwapComplete';
-import ContractTest from '../components/ContractTest';
+import WellSwapGlobalPlatform from '../components/WellSwapComplete';
+// import ContractTest from '../components/ContractTest';
 
 export default function Home() {
   return (
     <div>
       {/* 기존 WellSwap 플랫폼 */}
-      <WellSwapPlatform />
+      <WellSwapGlobalPlatform />
       
-      {/* 컨트랙트 테스트 섹션 추가 */}
+      {/* 컨트랙트 테스트 섹션 임시 비활성화 */}
+      {/* 
       <section className="py-12 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8">
@@ -22,6 +23,7 @@ export default function Home() {
           <ContractTest />
         </div>
       </section>
+      */}
     </div>
   );
 }

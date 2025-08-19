@@ -7,12 +7,10 @@ import {
   useTrading, 
   useContractData 
 } from './ContractIntegration';
-import { WellSwapDB } from '../lib/database-wellswap'
-import { supabase } from '../lib/database-wellswap'
 import { Camera, Upload, User, Menu, X, Wallet, ArrowRight, Globe, MessageSquare, BarChart3, TrendingUp, Shield, CheckCircle2, AlertCircle, Clock, DollarSign } from 'lucide-react';
 import ReliabilityScore from './reliability/ReliabilityScore';
-import fulfillmentAPI from '../lib/fulfillment-api';
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import fulfillmentAPI from '../lib/fulfillment-api';  // 이 줄 추가
+import React, { useState, useEffect, useRef } from 'react';
 
 const WellSwapGlobalPlatform = () => {
   const [currentPage, setCurrentPage] = useState('home');
@@ -436,8 +434,42 @@ const [notifications, setNotifications] = useState<NotificationState[]>([]);
     customContractPeriod: ''
   });
 
-  const [listingData, setListingData] = useState<any[]>([])
-
+  const [listingData, setListingData] = useState([
+    {
+      id: 1,
+      company: 'AIA Group Limited',
+      productName: 'Premier Flexi Plan',
+      category: t.savingsPlan,
+      surrenderValue: 45000,
+      transferValue: 52000,
+      platformPrice: 50400,
+      confidence: 0.89,
+      riskGrade: 'A',
+      contractPeriod: '10 Years',
+      paidPeriod: '5 Years',
+      annualPayment: 8000,
+      status: 'available',
+      seller: '0x1234...5678',
+      listingDate: '2025-08-10'
+    },
+    {
+      id: 2,
+      company: 'Prudential plc',
+      productName: 'PruLink Global Fund',
+      category: t.investmentLinked,
+      surrenderValue: 62000,
+      transferValue: 71000,
+      platformPrice: 68870,
+      confidence: 0.92,
+      riskGrade: 'A',
+      contractPeriod: '15 Years',
+      paidPeriod: '7 Years',
+      annualPayment: 9500,
+      status: 'available',
+      seller: '0x9876...4321',
+      listingDate: '2025-08-12'
+    }
+  ]);
 
   // Wallet Connection
   const connectWallet = async () => {
@@ -445,14 +477,12 @@ const [notifications, setNotifications] = useState<NotificationState[]>([]);
       try {
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         setConnectedAccount(accounts[0]);
-        addNotification('✅ Wallet connected successfully!', 'success');
+        alert(`Wallet connected: ${accounts[0]}`);
       } catch (error) {
-        console.error('Wallet connection failed:', error);
-        addNotification('❌ Failed to connect wallet. Please try again.', 'error');
-        // ❌ 여기서 setConnectedAccount(null) 하지 않음
+        alert('Failed to connect wallet');
       }
     } else {
-      addNotification('❌ MetaMask not detected. Please install MetaMask.', 'error');
+      alert('MetaMask not detected. Please install MetaMask.');
     }
   };
 
@@ -487,28 +517,13 @@ const [notifications, setNotifications] = useState<NotificationState[]>([]);
   try {
     console.log('🤖 AI 평가 시작...');
     
-    // 1. 실시간 이행률 데이터 조회 (오류 처리 강화)
-console.log('📊 이행률 데이터 조회 중...');
-let fulfillmentWeights;
-try {
-  fulfillmentWeights = await fulfillmentAPI.getValuationWeights(
-    data.company || '알 수 없음',
-    data.productCategory || 'Life Insurance',
-    parseInt(data.actualPaymentPeriod) || 5
-  );
-} catch (fulfillmentError) {
-  console.warn('Fulfillment API 오류, 기본값 사용:', fulfillmentError);
-  // 기본값으로 대체
-  fulfillmentWeights = {
-    adjustmentFactor: 1.0,
-    reliabilityScore: 0.8,
-    recommendation: 'standard',
-    details: {
-      dataAvailable: false,
-      source: 'default_fallback'
-    }
-  };
-}
+    // 1. 🆕 실시간 이행률 데이터 조회
+    console.log('📊 이행률 데이터 조회 중...');
+    const fulfillmentWeights = await fulfillmentAPI.getValuationWeights(
+      data.company || '알 수 없음',
+      data.productCategory || 'Life Insurance',
+      parseInt(data.actualPaymentPeriod) || 5
+    );
 
     // 2. 기존 AI 모델 평가 (기본 가치 계산)
     let baseResult;
@@ -628,216 +643,178 @@ try {
     }
     return options;
   };
-// 수정된 loadListingData 함수 - 실제 테이블 구조에 맞춘 버전
-const loadListingData = useCallback(async () => {
-  try {
-    setIsLoading(true)
-    console.log('📊 실제 DB에서 리스팅 데이터 로드 (수정된 버전)...')
 
-    // 먼저 간단하게 insurance_assets 테이블만 조회
-    const { data: assets, error } = await supabase
-      .from('insurance_assets')
-      .select('*')
-      .eq('status', 'active')
-      .order('created_at', { ascending: false })
-      .limit(50)
-
-    if (error) {
-      console.error('❌ DB 로드 오류:', error)
-      // 에러 시에도 빈 배열로 설정하여 UI가 정상 작동하도록
-      setListingData([])
-      return
-    }
-
-    if (!assets || assets.length === 0) {
-      console.log('📋 등록된 보험 상품이 없습니다.')
-      setListingData([])
-      return
-    }
-
-    // 실제 테이블 구조에 맞게 데이터 변환
-    const formattedData = assets.map((asset: any, index: number) => ({
-      id: asset.id || index + 1,
-      company: asset.company || 'Unknown Company',
-      productName: asset.policy_type || asset.company || 'Insurance Product',
-      category: t.savingsPlan, // 기본값
-      surrenderValue: asset.current_value ? Math.round(asset.current_value * 0.8) : 45000,
-      transferValue: asset.current_value ? Math.round(asset.current_value * 0.95) : 52000,
-      platformPrice: asset.current_value || 50000,
-      confidence: 0.85, // 기본값
-      riskGrade: 'A', // 기본값
-      contractPeriod: '10 Years', // 기본값
-      paidPeriod: '5 Years', // 기본값
-      annualPayment: asset.purchase_price || 8000,
-      status: asset.status === 'active' ? 'available' : 'sold',
-      seller: asset.owner_address || 'Unknown',
-      listingDate: asset.created_at ? new Date(asset.created_at).toISOString().split('T')[0] : '2025-08-19'
-    }))
-
-    setListingData(formattedData)
-    console.log('✅ 실제 DB 데이터 로드 완료:', formattedData.length, '건')
-
-    // 샘플 데이터가 없을 경우 안내 메시지
-    if (formattedData.length === 0) {
-      console.log('💡 현재 등록된 보험 상품이 없습니다. Sell 페이지에서 새로운 상품을 등록해보세요!')
-    }
-
-  } catch (error) {
-    console.error('❌ 데이터 로드 실패:', error)
-    
-    // 완전 실패 시 기본 샘플 데이터라도 표시 (사용자 경험 개선)
-    console.log('🔄 기본 데이터로 대체합니다...')
-    setListingData([
-      {
-        id: 'sample-1',
-        company: 'AIA Group Limited',
-        productName: 'Premier Flexi Plan (Sample)',
-        category: t.savingsPlan,
-        surrenderValue: 45000,
-        transferValue: 52000,
-        platformPrice: 50400,
-        confidence: 0.89,
-        riskGrade: 'A',
-        contractPeriod: '10 Years',
-        paidPeriod: '5 Years',
-        annualPayment: 8000,
-        status: 'available',
-        seller: 'Sample User',
-        listingDate: '2025-08-19'
-      }
-    ])
-  } finally {
-    setIsLoading(false)
-  }
-}, []); // useCallback 의존성 배열 추가
   // Sell Insurance Handler - 실제 블록체인 연동
   const handleSellSubmit = async () => {
     // 1. 필수 입력값 검증
     if (!insuranceData.company || !insuranceData.productName || !insuranceData.totalPayment) {
-      addNotification('Please fill in all required fields.', 'error');
+      alert('Please fill in all required fields.');
       return;
     }
-  
+
     // 2. 지갑 연결 확인
     if (!connectedAccount) {
-      addNotification('Please connect your wallet first.', 'error');
+      alert('Please connect your wallet first to list insurance on blockchain.');
       return;
     }
-  
+
     try {
       setIsLoading(true);
-      addNotification('Starting insurance registration...', 'info');
-  
-      // 3. AI 평가 수행
+
+      // 3. AI 평가 수행 (신뢰도 포함)
       console.log('🤖 AI 평가 시작...');
       const aiResult = await performAdvancedAIValuation(insuranceData);
       
-      // 4. 사용자 확인
-      const userConfirmed = confirm(`
-  AI Valuation Complete!
-  
-  Platform Price: $${aiResult.platformPrice?.toLocaleString()}
-  AI Confidence: ${(aiResult.confidence * 100).toFixed(1)}%
-  Risk Grade: ${aiResult.riskGrade}
-  
-  Proceed with registration to database?
-      `);
+      // 4. 블록체인 거래 준비
+      console.log('🔗 블록체인 거래 준비 중...');
       
-      if (!userConfirmed) {
-        setIsLoading(false);
-        return;
-      }
-  
-      // 5. 사용자 확인 및 등록
-      let userId;
-      try {
-        const { data: user, error: userError } = await WellSwapDB.getUserByWallet(connectedAccount);
+      if (typeof window.ethereum !== 'undefined') {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
         
-        if (user) {
-          userId = user.id;
-        } else {
-          // 새 사용자 생성
-          const userData = {
-            wallet_address: connectedAccount.toLowerCase(),
-            role: 'user',
-            reputation_score: 100,
-            total_trades: 0
+        // 5. 컨트랙트 연결
+        const contract = new ethers.Contract(
+          "0x58228104D72Aa48F1761804a090be24c01523972", // WellSwap 컨트랙트 주소
+          [
+            "function payRegistrationFee(uint8 userType) external payable",
+            "function registerInsuranceAsset(string memory assetDetails, uint256 evaluationScore) external",
+            "function updateAIEvaluation(uint256 assetId, uint256 newScore, string memory details) external"
+          ],
+          signer
+        );
+
+        // 6. BNB/USD 변환 (300 USD)
+        const bnbPrice = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BNBUSDT')
+          .then(res => res.json())
+          .then(data => parseFloat(data.price))
+          .catch(() => 300); // fallback BNB price
+
+        const registrationFeeUSD = 300;
+        const registrationFeeBNB = registrationFeeUSD / bnbPrice;
+        const registrationFeeWei = ethers.utils.parseEther(registrationFeeBNB.toFixed(6));
+
+        // 7. 사용자 확인
+  const resultMessage = `
+Advanced AI Valuation Complete!
+
+Valuation Results:
+- Original Value: $${aiResult.originalPlatformPrice?.toLocaleString() || aiResult.platformPrice.toLocaleString()}
+- Reliability Adjustment: ${aiResult.fulfillmentAdjustment?.adjustmentPercent || '0.0'}%
+- Final Platform Price: $${aiResult.platformPrice.toLocaleString()}
+- AI Confidence: ${(aiResult.confidence * 100).toFixed(1)}%
+- Risk Grade: ${aiResult.riskGrade}
+
+${aiResult.fulfillmentAdjustment ? 
+  `Reliability Analysis:
+- Insurance Company: ${Math.round(aiResult.fulfillmentAdjustment.reliabilityScore * 100)}/100
+- Data Source: ${aiResult.fulfillmentAdjustment.dataAvailable ? 'HK Regulator Crawling' : 'Default Rating'}
+- Recommendation: ${aiResult.fulfillmentAdjustment.recommendation.toUpperCase()}` : 
+  'Using standard evaluation'}
+
+Blockchain Transaction:
+- Registration Fee: ${registrationFeeUSD} USD (${registrationFeeBNB.toFixed(4)} BNB)
+- Network: BSC Testnet
+- Contract: 0x5822...3972
+
+Proceed with blockchain listing?
+        `;
+        
+        const confirmed = confirm(resultMessage);
+        
+        if (confirmed) {
+          console.log('🔗 블록체인 트랜잭션 실행 중...');
+          
+          // 8. 블록체인 등록 수수료 지불
+          const registrationTx = await contract.payRegistrationFee(1, { // 1 = seller
+            value: registrationFeeWei,
+            gasLimit: 300000
+          });
+          
+          console.log('⏳ 등록 수수료 트랜잭션 대기 중...', registrationTx.hash);
+          await registrationTx.wait();
+          
+          // 9. 보험 자산 정보를 블록체인에 등록
+          const assetDetails = JSON.stringify({
+            company: insuranceData.company,
+            productName: insuranceData.productName,
+            category: insuranceData.productCategory,
+            contractPeriod: insuranceData.contractPeriod,
+            paidPeriod: insuranceData.actualPaymentPeriod,
+            totalPayment: insuranceData.totalPayment,
+            aiEvaluation: aiResult,
+            timestamp: new Date().toISOString(),
+            seller: connectedAccount
+          });
+
+          const assetTx = await contract.registerInsuranceAsset(
+            assetDetails,
+            Math.round(aiResult.score * 100) // 점수를 정수로 변환
+          );
+          
+          console.log('⏳ 자산 등록 트랜잭션 대기 중...', assetTx.hash);
+          await assetTx.wait();
+
+          // 10. 성공 시 로컬 리스트에 추가
+          const newListing = {
+            id: Date.now(),
+            company: insuranceData.company,
+            productName: insuranceData.productName,
+            category: insuranceData.productCategory,
+            surrenderValue: aiResult.surrenderValue,
+            transferValue: aiResult.transferValue,
+            platformPrice: aiResult.platformPrice,
+            confidence: aiResult.confidence,
+            riskGrade: aiResult.riskGrade,
+            contractPeriod: insuranceData.contractPeriod === t.customInput 
+              ? `${insuranceData.customContractPeriod} Years`
+              : insuranceData.contractPeriod,
+            paidPeriod: insuranceData.actualPaymentPeriod,
+            annualPayment: parseFloat(insuranceData.annualPayment),
+            status: 'available',
+            seller: connectedAccount,
+            listingDate: new Date().toISOString().split('T')[0],
+            aiMethod: aiResult.method || 'advanced_ai',
+            blockchainTxHash: assetTx.hash,
+            reliabilityInfo: aiResult.reliabilityInfo
           };
+
+          setListingData(prev => [newListing, ...prev]);
           
-          const { data: newUser, error: createError } = await WellSwapDB.createUser(userData);
+          alert(`✅ Insurance successfully listed on blockchain!
           
-          if (createError) {
-            console.error('User creation error:', createError);
-            userId = `temp_${Date.now()}`;
-          } else {
-            userId = newUser?.id;
-          }
+🔗 Transaction Hash: ${assetTx.hash}
+📊 Platform Price: $${aiResult.platformPrice.toLocaleString()}
+🏛️ Reliability Grade: ${aiResult.reliabilityInfo?.reliabilityScore?.grade || 'N/A'}
+
+Your insurance is now available for global trading!`);
+          
+          // 11. 폼 리셋
+          setInsuranceData({
+            company: '',
+            productCategory: '',
+            productName: '',
+            startDate: '',
+            contractPeriod: '',
+            actualPaymentPeriod: '',
+            annualPayment: '',
+            totalPayment: '',
+            customContractPeriod: ''
+          });
         }
-      } catch (userError) {
-        console.warn('User lookup failed, using temporary ID:', userError);
-        userId = `temp_${Date.now()}`;
+      } else {
+        alert('MetaMask not detected. Please install MetaMask to proceed with blockchain transactions.');
       }
-  
-      // 6. 보험 자산 DB에 등록
-      const assetData = {
-        owner_id: userId,
-        company_name: insuranceData.company,
-        product_name: insuranceData.productName,
-        product_category: insuranceData.productCategory || 'Life Insurance',
-        policy_number: `POL-${Date.now()}`,
-        contract_date: insuranceData.startDate,
-        contract_period_years: parseInt(insuranceData.contractPeriod) || 10,
-        paid_period_years: parseInt(insuranceData.actualPaymentPeriod) || 5,
-        annual_premium: parseFloat(insuranceData.annualPayment) || 0,
-        total_paid: parseFloat(insuranceData.totalPayment),
-        currency: 'USD',
-        asking_price: aiResult.platformPrice,
-        status: 'listed'
-      };
-  
-      const { data: asset, error: assetError } = await WellSwapDB.createInsuranceAsset(assetData);
-      
-      if (assetError) {
-        throw new Error('Failed to register insurance asset');
-      }
-  
-      // 7. AI 평가 결과 저장
-      const valuationData = {
-        asset_id: asset.id,
-        surrender_value: aiResult.surrenderValue,
-        transfer_value: aiResult.transferValue,
-        platform_price: aiResult.platformPrice,
-        confidence_score: aiResult.confidence,
-        risk_grade: aiResult.riskGrade,
-        adjustment_factor: aiResult.fulfillmentAdjustment?.factor || 1.0,
-        reliability_score: aiResult.fulfillmentAdjustment?.reliabilityScore || 0.8,
-        analysis_details: aiResult
-      };
-  
-      await WellSwapDB.saveAIValuation(valuationData);
-  
-      // 8. 성공 처리
-      addNotification('✅ Insurance successfully registered!', 'success');
-      
-      // 9. 폼 리셋 (성공 시에만)
-      setInsuranceData({
-        company: '',
-        productCategory: '',
-        productName: '',
-        startDate: '',
-        contractPeriod: '',
-        actualPaymentPeriod: '',
-        annualPayment: '',
-        totalPayment: '',
-        customContractPeriod: ''
-      });
-  
-      // 10. 리스팅 데이터 새로고침
-      await loadListingData();
       
     } catch (error) {
-      console.error('Registration error:', error);
-      addNotification(`❌ Registration failed: ${error.message}`, 'error');
+      console.error('블록체인 거래 오류:', error);
+      
+      if (error.code === 4001) {
+        alert('Transaction cancelled by user.');
+      } else if (error.code === -32603) {
+        alert('Insufficient BNB balance for transaction. Please add BNB to your wallet.');
+      } else {
+        alert(`Blockchain transaction failed: ${error.message}`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -845,8 +822,8 @@ const loadListingData = useCallback(async () => {
 
   // ===== OCR 관련 함수들 (기존 함수들 아래에 추가) =====
   
-  // 기존 함수를 useCallback으로 감싸기
-  const addNotification = useCallback((message: string, type: 'success' | 'error' | 'warning' | 'info') => {
+  // Notification System
+  const addNotification = (message: string, type: 'success' | 'error' | 'warning' | 'info') => {
     const notification = {
       id: Date.now().toString(),
       message,
@@ -856,13 +833,11 @@ const loadListingData = useCallback(async () => {
     
     setNotifications(prev => [notification, ...prev.slice(0, 4)]);
     
-    // 오류 메시지는 10초, 나머지는 5초
-    const timeout = type === 'error' ? 10000 : 5000;
-    
+    // Auto-remove after 5 seconds
     setTimeout(() => {
       setNotifications(prev => prev.filter(n => n.id !== notification.id));
-    }, timeout);
-  }, []); // 빈 의존성 배열
+    }, 5000);
+  };
 
   // Camera Functions
   const startCamera = async () => {
@@ -1187,8 +1162,8 @@ const loadListingData = useCallback(async () => {
               <label className="block text-sm font-light text-zinc-600 mb-2">{t.productName}</label>
               <input
                 type="text"
-                defaultValue={insuranceData.productName}
-                onBlur={(e) => setInsuranceData(prev => ({ ...prev, productName: e.target.value }))}
+                value={insuranceData.productName}
+                onChange={(e) => setInsuranceData(prev => ({ ...prev, productName: e.target.value }))}
                 placeholder={t.enterProductName}
                 className="w-full p-4 border border-zinc-200 bg-zinc-50 text-zinc-900 font-light focus:outline-none focus:border-zinc-400 transition-colors"
                 style={{ clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 100%, 0 100%)' }}
@@ -1200,8 +1175,8 @@ const loadListingData = useCallback(async () => {
               <label className="block text-sm font-light text-zinc-600 mb-2">{t.contractDate}</label>
               <input
                 type="date"
-                defaultValue={insuranceData.startDate}
-                onBlur={(e) => setInsuranceData(prev => ({ ...prev, startDate: e.target.value }))}
+                value={insuranceData.startDate}
+                onChange={(e) => setInsuranceData(prev => ({ ...prev, startDate: e.target.value }))}
                 className="w-full p-4 border border-zinc-200 bg-zinc-50 text-zinc-900 font-light focus:outline-none focus:border-zinc-400 transition-colors"
                 style={{ clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 100%, 0 100%)' }}
               />
@@ -1229,8 +1204,8 @@ const loadListingData = useCallback(async () => {
                 <label className="block text-sm font-light text-zinc-600 mb-2">{t.customPeriod}</label>
                 <input
                   type="number"
-                  defaultValue={insuranceData.customContractPeriod}
-                  onBlur={(e) => setInsuranceData(prev => ({ ...prev, customContractPeriod: e.target.value }))}
+                  value={insuranceData.customContractPeriod}
+                  onChange={(e) => setInsuranceData(prev => ({ ...prev, customContractPeriod: e.target.value }))}
                   placeholder="e.g., 12"
                   className="w-full p-4 border border-zinc-200 bg-zinc-50 text-zinc-900 font-light focus:outline-none focus:border-zinc-400 transition-colors"
                   style={{ clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 100%, 0 100%)' }}
@@ -1260,8 +1235,8 @@ const loadListingData = useCallback(async () => {
               <label className="block text-sm font-light text-zinc-600 mb-2">{t.annualPremium}</label>
               <input
                 type="number"
-                defaultValue={insuranceData.annualPayment}
-                onBlur={(e) => setInsuranceData(prev => ({ ...prev, annualPayment: e.target.value }))}
+                value={insuranceData.annualPayment}
+                onChange={(e) => setInsuranceData(prev => ({ ...prev, annualPayment: e.target.value }))}
                 placeholder="e.g., 10000"
                 className="w-full p-4 border border-zinc-200 bg-zinc-50 text-zinc-900 font-light focus:outline-none focus:border-zinc-400 transition-colors"
                 style={{ clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 100%, 0 100%)' }}
@@ -1273,8 +1248,8 @@ const loadListingData = useCallback(async () => {
               <label className="block text-sm font-light text-zinc-600 mb-2">{t.totalPaid}</label>
               <input
                 type="number"
-                defaultValue={insuranceData.totalPayment}
-                onBlur={(e) => setInsuranceData(prev => ({ ...prev, totalPayment: e.target.value }))}
+                value={insuranceData.totalPayment}
+                onChange={(e) => setInsuranceData(prev => ({ ...prev, totalPayment: e.target.value }))}
                 placeholder="e.g., 50000"
                 className="w-full p-4 border border-zinc-200 bg-zinc-50 text-zinc-900 font-light focus:outline-none focus:border-zinc-400 transition-colors"
                 style={{ clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 100%, 0 100%)' }}
@@ -1521,12 +1496,6 @@ const loadListingData = useCallback(async () => {
     </div>
   );
 
-    // 컴포넌트 마운트 시 실제 데이터 로드
-    useEffect(() => {
-      console.log('🚀 WellSwap 플랫폼 초기화 - 실제 DB 연동')
-      loadListingData()
-    }, [loadListingData])
-
   // Main Render
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-900">
@@ -1642,25 +1611,10 @@ const loadListingData = useCallback(async () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 md:px-6 py-8 md:py-12">
-       {/* 기존 코드 */}
-{/* {currentPage === 'home' && <HomePage />}
-{currentPage === 'sell' && <SellInsurancePage />}
-{currentPage === 'buy' && <BuyInsurancePage />}
-{currentPage === 'inquiry' && <InquiryPage />} */}
-
-{/* 수정된 코드 - CSS로 숨김/표시 */}
-<div style={{ display: currentPage === 'home' ? 'block' : 'none' }}>
-  <HomePage />
-</div>
-<div style={{ display: currentPage === 'sell' ? 'block' : 'none' }}>
-  <SellInsurancePage />
-</div>
-<div style={{ display: currentPage === 'buy' ? 'block' : 'none' }}>
-  <BuyInsurancePage />
-</div>
-<div style={{ display: currentPage === 'inquiry' ? 'block' : 'none' }}>
-  <InquiryPage />
-</div>
+        {currentPage === 'home' && <HomePage />}
+        {currentPage === 'sell' && <SellInsurancePage />}
+        {currentPage === 'buy' && <BuyInsurancePage />}
+        {currentPage === 'inquiry' && <InquiryPage />}
       </main>
 
       {/* Footer */}
@@ -1681,4 +1635,4 @@ const loadListingData = useCallback(async () => {
   );
 };
 
-export default React.memo(WellSwapGlobalPlatform);
+export default WellSwapGlobalPlatform;
