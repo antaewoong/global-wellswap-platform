@@ -19,7 +19,7 @@ const CONTRACT_CONFIG = {
     }
   },
   
-  // 🎯 배포된 WellSwap 컨트랙트 주소 (BSC 테스트넷)
+  // 🎯 배포할 WellSwap 컨트랙트 주소 (배포 후 업데이트)
   CONTRACT_ADDRESS: "0xa84125fe1503485949d3e4fedcc454429289c8ea",
   
   // 완전한 WellSwap 컨트랙트 ABI
@@ -1223,41 +1223,6 @@ const CONTRACT_CONFIG = {
   ]
 };
 
-// 🌐 BSC 테스트넷으로 네트워크 전환 함수
-const switchToBSCTestnet = async () => {
-  try {
-    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-    
-    if (chainId !== CONTRACT_CONFIG.NETWORK.chainId) {
-      console.log('🔄 BSC 테스트넷으로 네트워크 전환 중...');
-      
-      await window.ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: CONTRACT_CONFIG.NETWORK.chainId }],
-      });
-      
-      console.log('✅ BSC 테스트넷으로 전환 완료');
-    }
-  } catch (switchError) {
-    // 네트워크가 MetaMask에 추가되지 않은 경우
-    if (switchError.code === 4902) {
-      try {
-        await window.ethereum.request({
-          method: 'wallet_addEthereumChain',
-          params: [CONTRACT_CONFIG.NETWORK],
-        });
-        console.log('✅ BSC 테스트넷 추가 완료');
-      } catch (addError) {
-        console.error('❌ BSC 테스트넷 추가 실패:', addError);
-        throw new Error('BSC 테스트넷을 MetaMask에 추가할 수 없습니다.');
-      }
-    } else {
-      console.error('❌ 네트워크 전환 실패:', switchError);
-      throw new Error('BSC 테스트넷으로 전환할 수 없습니다.');
-    }
-  }
-};
-
 // 🌐 완전한 Web3 연결 훅
 export const useWeb3 = () => {
   const [provider, setProvider] = useState(null);
@@ -1294,15 +1259,10 @@ export const useWeb3 = () => {
       console.log('✅ 계정 연결됨:', userAccount);
 
       // 네트워크 확인 및 변경
-      try {
-        await switchToBSCTestnet();
-      } catch (networkError) {
-        console.error('❌ 네트워크 전환 실패:', networkError);
-        throw new Error(`네트워크 전환 실패: ${networkError.message}`);
-      }
+      await switchToBSCTestnet();
       
       // 컨트랙트 주소 검증
-      if (!CONTRACT_CONFIG.CONTRACT_ADDRESS || CONTRACT_CONFIG.CONTRACT_ADDRESS === "0x당신의_실제_컨트랙트_주소_여기에_입력") {
+      if (CONTRACT_CONFIG.CONTRACT_ADDRESS === "0x당신의_실제_컨트랙트_주소_여기에_입력") {
         console.warn('⚠️ 컨트랙트 주소가 설정되지 않았습니다. 먼저 컨트랙트를 배포하고 주소를 업데이트하세요.');
         throw new Error('컨트랙트가 배포되지 않았습니다. 관리자에게 문의하세요.');
       }
@@ -1403,26 +1363,12 @@ export const useWeb3 = () => {
         }
       });
 
-      // 네트워크 변경 감지 - 새로고침 제거, 안전한 상태 재초기화
-      window.ethereum.on('chainChanged', async (chainId) => {
+      // 네트워크 변경 감지
+      window.ethereum.on('chainChanged', (chainId) => {
         if (chainId !== CONTRACT_CONFIG.NETWORK.chainId) {
           console.log('⚠️ 네트워크가 변경되었습니다. BSC 테스트넷으로 변경해주세요.');
-          // 새로고침 대신 상태만 안전하게 재초기화
-          try {
-            const web3Provider = new ethers.providers.Web3Provider(window.ethereum);
-            const web3Signer = web3Provider.getSigner();
-            setProvider(web3Provider);
-            setSigner(web3Signer);
-            // 컨트랙트 다시 바인딩
-            setContract(new ethers.Contract(
-              CONTRACT_CONFIG.CONTRACT_ADDRESS,
-              CONTRACT_CONFIG.CONTRACT_ABI,
-              web3Signer
-            ));
-          } catch (e) {
-            console.error('Re-init on chainChanged failed:', e);
-          }
         }
+        window.location.reload();
       });
     }
 

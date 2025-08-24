@@ -128,7 +128,7 @@ export class AuthService {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new WellSwapError('No authenticated user', 'AUTH_REQUIRED')
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase
         .from('profiles')
         .update({
           ...updates,
@@ -136,7 +136,7 @@ export class AuthService {
         })
         .eq('id', user.id)
         .select()
-        .single()
+        .single() as any)
 
       if (error) {
         log.error('Update profile error:', error)

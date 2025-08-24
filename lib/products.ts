@@ -50,10 +50,10 @@ export class ProductService {
           .single()
 
         if (existingCompany) {
-          companyId = existingCompany.id
+          companyId = (existingCompany as any).id
         } else {
           // 새 보험사 생성
-          const { data: newCompany, error: companyError } = await supabase
+          const { data: newCompany, error: companyError } = await (supabase
             .from('insurance_companies')
             .insert({
               name: productData.company_name,
@@ -61,7 +61,7 @@ export class ProductService {
               is_verified: false
             })
             .select('id')
-            .single()
+            .single() as any)
 
           if (companyError) {
             log.error('Create company error:', companyError)
@@ -479,7 +479,9 @@ export class ProductService {
 
       const totalProducts = statsData?.length || 0
       const totalValue = statsData?.reduce((sum, product) => sum + (product.current_value || product.original_value), 0) || 0
-      const avgConfidence = aiData?.reduce((sum, analysis) => sum + (analysis.confidence_score || 0), 0) / (aiData?.length || 1) || 0
+      const avgConfidence = aiData && aiData.length > 0 
+        ? aiData.reduce((sum, analysis) => sum + (analysis.confidence_score || 0), 0) / aiData.length 
+        : 0
 
       // 보험사별 상품 수 계산
       const companyCount: Record<string, number> = {}

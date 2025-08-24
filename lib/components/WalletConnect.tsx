@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Wallet, LogOut, Shield, User } from 'lucide-react'
-import { supabase, checkUserRole } from '../lib/supabase'
+import { supabase, checkUserRole } from '../../lib/database-wellswap'
 
 interface WalletConnectProps {
   onConnect: (address: string, role: 'admin' | 'user') => void
@@ -168,9 +168,3 @@ export default function WalletConnect({ onConnect, onDisconnect }: WalletConnect
   )
 }
 
-// Window 타입 확장
-declare global {
-  interface Window {
-    ethereum?: any
-  }
-}

@@ -1,12 +1,19 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // experimental에서 appDir 제거
+  reactStrictMode: true,
   typescript: {
-    ignoreBuildErrors: true,
+    // 프로덕션 빌드 시 타입 에러 무시 (임시)
+    ignoreBuildErrors: false
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  webpack: (config) => {
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      net: false,
+      tls: false,
+    };
+    return config;
+  }
 }
 
-module.exports = nextConfig
+module.exports = nextConfig;
