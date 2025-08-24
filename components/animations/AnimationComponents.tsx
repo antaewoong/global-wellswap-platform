@@ -128,7 +128,7 @@ export const TypewriterText = ({
   }, [currentIndex, text, speed, isTyping, repeat, pauseAfterComplete]);
   
   return (
-    <span className={`${className} inline-flex items-baseline`}>
+    <span className={`${className} inline-flex items-baseline`} style={{ minHeight: '1.2em' }}>
       <span>{displayText}</span>
       <motion.span
         animate={{ opacity: [1, 0] }}

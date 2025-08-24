@@ -211,7 +211,7 @@ export const HomePage = React.memo(function HomePage({ t, setCurrentPage }: { t:
         <div className="relative">
           <h1 className="text-[8rem] sm:text-[12rem] md:text-[16rem] lg:text-[20rem] xl:text-[24rem] 2xl:text-[28rem] font-extralight tracking-tighter leading-[0.85] text-zinc-900 select-none relative z-10">
             <TypewriterText 
-              text="WellSwap"
+              text={t.mainTitle}
               speed={150}
               delay={500}
               repeat={true}
@@ -804,18 +804,11 @@ export const BuyInsurancePage = React.memo(function BuyInsurancePage({
     <div className="space-y-8">
       <div>
         <h1 className="text-[8rem] sm:text-[12rem] md:text-[16rem] lg:text-[20rem] xl:text-[24rem] 2xl:text-[28rem] font-extralight tracking-tighter leading-[0.85] text-zinc-900 select-none">
-          <TypewriterText 
-            text="BUY"
-            speed={150}
-            delay={500}
-            repeat={true}
-            pauseAfterComplete={2000}
-            className=""
-          />
+          BUY
         </h1>
         <div className="w-24 h-px bg-zinc-900 mb-6"></div>
         <p className="text-lg sm:text-xl text-zinc-600 font-light tracking-wide">
-          Browse available insurance transfers globally
+          {t.globalInsuranceTransferProductSearch}
         </p>
       </div>
 
@@ -848,72 +841,73 @@ export const BuyInsurancePage = React.memo(function BuyInsurancePage({
         </div>
       </div>
 
-      {/* 리스팅 그리드 */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      {/* 리스팅 그리드 (기존 100% 유지) */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
         {listingData.map(listing => (
           <div 
             key={listing.id}
-            className="p-6 border border-zinc-200 bg-zinc-50 hover:border-zinc-400 transition-colors rounded-lg"
+            className="p-4 md:p-6 border border-zinc-200 bg-zinc-50 hover:border-zinc-400 transition-colors"
+            style={{ clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 100%, 0 100%)' }}
           >
             {/* 헤더 */}
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-6 gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-4 gap-2">
               <div className="flex-1">
-                <h3 className="font-light text-xl text-zinc-900 mb-1">{listing.productName}</h3>
-                <p className="text-sm text-zinc-600 mb-2">{listing.company}</p>
-                <span className="inline-block px-3 py-1 text-xs bg-zinc-200 text-zinc-700 rounded">
+                <h3 className="font-light text-base md:text-lg text-zinc-900">{listing.productName}</h3>
+                <p className="text-xs md:text-sm text-zinc-600">{listing.company}</p>
+                <span className="inline-block px-2 py-1 text-xs bg-zinc-200 text-zinc-700 mt-1">
                   {listing.category}
                 </span>
               </div>
-              <div className={`px-3 py-1 text-xs rounded-full shrink-0 ${
+              <div className={`px-2 py-1 text-xs rounded shrink-0 ${
                 listing.status === 'available' ? 'bg-green-100 text-green-700' :
                 listing.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
                 listing.status === 'blockchain_pending' ? 'bg-blue-100 text-blue-700' :
                 'bg-red-100 text-red-700'
               }`}>
-                {listing.status === 'available' ? 'Available' :
-                 listing.status === 'pending' ? 'Pending' :
-                 listing.status === 'blockchain_pending' ? 'Processing' : 'Sold'}
+                {listing.status === 'available' ? t.available :
+                 listing.status === 'pending' ? t.pending :
+                 listing.status === 'blockchain_pending' ? '블록체인 거래중' : t.sold}
               </div>
             </div>
 
             {/* 세부 정보 */}
-            <div className="space-y-3 mb-6 text-sm">
+            <div className="space-y-1 md:space-y-2 mb-4 text-xs md:text-sm">
               <div className="flex justify-between">
-                <span className="text-zinc-600">Contract Period:</span>
-                <span className="text-zinc-900 font-medium">{listing.contractPeriod}</span>
+                <span className="text-zinc-600">{t.contractPeriod}:</span>
+                <span className="text-zinc-900">{listing.contractPeriod}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-zinc-600">Paid Period:</span>
-                <span className="text-zinc-900 font-medium">{listing.paidPeriod}</span>
+                <span className="text-zinc-600">{t.paymentPeriod}:</span>
+                <span className="text-zinc-900">{listing.paidPeriod}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-zinc-600">Annual Premium:</span>
-                <span className="text-zinc-900 font-medium">${listing.annualPayment.toLocaleString()}</span>
+                <span className="text-zinc-600">{t.annualPremium}:</span>
+                <span className="text-zinc-900">${listing.annualPayment.toLocaleString()}</span>
               </div>
             </div>
 
             {/* 가격 정보 */}
-            <div className="border-t border-zinc-300 pt-6 mb-6">
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-sm text-zinc-600">Surrender Value:</span>
-                <span className="text-lg font-medium text-zinc-700">
+            <div className="border-t border-zinc-300 pt-4 mb-4">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm text-zinc-600">{t.surrenderValue}:</span>
+                <span className="text-lg font-light text-zinc-700">
                   ${listing.surrenderValue.toLocaleString()}
                 </span>
               </div>
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-sm text-zinc-600">Transfer Value:</span>
-                <span className="text-lg font-medium text-zinc-900">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm text-zinc-600">{t.transferValue}:</span>
+                <span className="text-lg font-light text-zinc-900">
                   ${listing.transferValue.toLocaleString()}
                 </span>
               </div>
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-sm text-zinc-600">Platform Price:</span>
-                <span className="text-xl font-medium text-zinc-900">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm text-zinc-600">{t.platformPrice}:</span>
+                <span className="text-xl font-light text-zinc-900">
                   ${listing.platformPrice.toLocaleString()}
                 </span>
               </div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-zinc-600">AI Confidence:</span>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-zinc-600">{t.confidence}:</span>
                 <span className={`text-sm font-medium ${
                   listing.confidence > 0.8 ? 'text-green-600' : 
                   listing.confidence > 0.6 ? 'text-yellow-600' : 'text-red-600'
@@ -921,9 +915,9 @@ export const BuyInsurancePage = React.memo(function BuyInsurancePage({
                   {(listing.confidence * 100).toFixed(1)}%
                 </span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-zinc-600">Risk Grade:</span>
-                <span className={`text-sm font-medium px-3 py-1 rounded-full ${
+              <div className="flex justify-between items-center mt-1">
+                <span className="text-sm text-zinc-600">{t.riskGrade}:</span>
+                <span className={`text-sm font-medium px-2 py-1 rounded ${
                   listing.riskGrade === 'A' ? 'bg-green-100 text-green-700' :
                   listing.riskGrade === 'B' ? 'bg-blue-100 text-blue-700' :
                   listing.riskGrade === 'C' ? 'bg-yellow-100 text-yellow-700' :
@@ -935,45 +929,53 @@ export const BuyInsurancePage = React.memo(function BuyInsurancePage({
             </div>
 
             {/* 액션 버튼 */}
-            <div className="space-y-3">
+            <div className="space-y-2">
               {listing.status === 'available' ? (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <button
                     onClick={() => handleBuySubmitWithStats(listing)}
                     disabled={!isAuthenticated || !isWeb3Connected || isLoading}
-                    className="w-full p-3 bg-zinc-900 text-zinc-50 text-sm font-medium hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded"
+                    className="w-full p-2 md:p-3 bg-zinc-900 text-zinc-50 text-sm md:text-base font-light hover:bg-zinc-800 transform hover:translate-x-1 hover:translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 100%, 0 100%)' }}
                   >
                     {isLoading ? 'Processing...' : 
                      !isAuthenticated || !isWeb3Connected ? 'Connect Wallet to Purchase' : 
-                     'Purchase'}
+                     'Purchase with Multisig'}
                   </button>
                   <button
                     onClick={() => changePage('inquiry')}
-                    className="w-full p-3 border border-zinc-300 text-zinc-700 text-sm font-medium hover:border-zinc-400 hover:bg-zinc-100 transition-colors rounded"
+                    className="w-full p-2 md:p-3 border border-zinc-300 text-zinc-700 text-sm md:text-base font-light hover:border-zinc-400 hover:bg-zinc-100 transition-colors"
+                    style={{ clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 100%, 0 100%)' }}
                   >
-                    1:1 Inquiry
+                    {t.inquireNow}
                   </button>
                 </div>
               ) : listing.status === 'pending' || listing.status === 'blockchain_pending' ? (
-                <div className="p-3 bg-yellow-50 border border-yellow-200 text-center rounded">
+                <div className="p-2 md:p-3 bg-yellow-50 border border-yellow-200 text-center">
                   <div className="flex items-center justify-center space-x-2">
                     <Clock className="w-4 h-4 text-yellow-600" />
-                    <p className="text-sm text-yellow-700">
-                      {listing.status === 'blockchain_pending' ? 'Blockchain transaction in progress' : 'Transaction in progress'}
+                    <p className="text-xs md:text-sm text-yellow-700">
+                      {listing.status === 'blockchain_pending' ? '블록체인 거래 진행 중' : '거래 진행 중'}
                     </p>
                   </div>
                 </div>
               ) : (
-                <div className="p-3 bg-red-50 border border-red-200 text-center rounded">
+                <div className="p-2 md:p-3 bg-red-50 border border-red-200 text-center">
                   <div className="flex items-center justify-center space-x-2">
                     <CheckCircle2 className="w-4 h-4 text-red-600" />
-                    <p className="text-sm text-red-700">This product has been sold</p>
+                    <p className="text-xs md:text-sm text-red-700">이 상품은 판매되었습니다</p>
                   </div>
                 </div>
               )}
             </div>
 
-
+            {/* 푸터 */}
+            <div className="mt-3 md:mt-4 pt-2 md:pt-3 border-t border-zinc-200 text-xs text-zinc-500">
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
+                <span className="truncate">{t.seller}: {listing.seller}</span>
+                <span>{t.registrationDate}: {listing.listingDate}</span>
+              </div>
+            </div>
           </div>
         ))}
       </div>
@@ -981,7 +983,7 @@ export const BuyInsurancePage = React.memo(function BuyInsurancePage({
       {/* 빈 상태 */}
       {listingData.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-zinc-500 font-light">No products available at the moment.</p>
+          <p className="text-zinc-500 font-light">현재 등록된 상품이 없습니다.</p>
         </div>
       )}
     </div>
@@ -1029,18 +1031,11 @@ export const InquiryPage = React.memo(function InquiryPage({
     <div className="space-y-8">
       <div>
         <h1 className="text-[8rem] sm:text-[12rem] md:text-[16rem] lg:text-[20rem] xl:text-[24rem] 2xl:text-[28rem] font-extralight tracking-tighter leading-[0.85] text-zinc-900 select-none">
-          <TypewriterText 
-            text="CONCIERGE"
-            speed={150}
-            delay={500}
-            repeat={true}
-            pauseAfterComplete={2000}
-            className=""
-          />
+          CONCIERGE
         </h1>
         <div className="w-24 h-px bg-zinc-900 mb-6"></div>
         <p className="text-lg sm:text-xl text-zinc-600 font-light tracking-wide">
-          Professional Insurance Transfer Expert Service
+          {t.insuranceTransferExpert}
         </p>
       </div>
       
@@ -1602,130 +1597,29 @@ export default function WellSwapGlobalPlatform() {
     }
   };
 
-  // 61일 자동 회수 시스템 - 실제 블록체인 로직
+  // 자동 환불 대상 확인
   const checkAutoRefundEligibility = async () => {
-    if (!user || user.role !== 'admin' || !contract || !signer) return;
+    if (!user || user.role !== 'admin') return;
     
     setAutoRefundStatus(prev => ({ ...prev, processing: true }));
     try {
-      console.log('🔍 61일 자동 회수 대상 확인 시작...');
+      // 61일 경과된 거래 조회
+      const { data: eligibleAssets } = await supabase
+        .from('insurance_assets')
+        .select('*')
+        .eq('status', 'sold')
+        .lt('created_at', new Date(Date.now() - 61 * 24 * 60 * 60 * 1000).toISOString());
       
-      // 1단계: 블록체인에서 61일 경과된 거래 조회
-      const currentBlock = await provider.getBlockNumber();
-      const blockTime = await provider.getBlock(currentBlock);
-      const currentTimestamp = blockTime.timestamp;
-      const sixtyOneDaysAgo = currentTimestamp - (61 * 24 * 60 * 60);
-      
-      // 2단계: 컨트랙트에서 자동 회수 대상 조회
-      const eligibleTrades = await contract.getEligibleRefundTrades(sixtyOneDaysAgo);
-      
-      // 3단계: 각 거래의 상세 정보 조회
-      const eligibleAssets = [];
-      let totalRefundAmount = 0;
-      
-      for (const tradeId of eligibleTrades) {
-        try {
-          const trade = await contract.getTrade(tradeId);
-          const asset = await contract.getAsset(trade.assetId);
-          
-          if (trade.status === 3 && // sold status
-              trade.createdAt.toNumber() < sixtyOneDaysAgo) {
-            
-            const platformFee = trade.agreedPriceUSD.mul(25).div(1000); // 2.5% platform fee
-            totalRefundAmount += platformFee.toNumber();
-            
-            eligibleAssets.push({
-              tradeId: tradeId.toString(),
-              assetId: trade.assetId.toString(),
-              buyer: trade.buyer,
-              seller: asset.owner,
-              agreedPriceUSD: trade.agreedPriceUSD.toNumber(),
-              platformFee: platformFee.toNumber(),
-              createdAt: new Date(trade.createdAt.toNumber() * 1000),
-              daysElapsed: Math.floor((currentTimestamp - trade.createdAt.toNumber()) / (24 * 60 * 60))
-            });
-          }
-        } catch (error) {
-          console.warn(`거래 ${tradeId} 조회 실패:`, error);
-        }
-      }
-      
-      console.log('✅ 자동 회수 대상 확인 완료:', {
-        eligibleCount: eligibleAssets.length,
-        totalAmount: totalRefundAmount
-      });
+      const totalAmount = eligibleAssets?.reduce((sum, asset) => sum + (asset.platform_fee || 0), 0) || 0;
       
       setAutoRefundStatus({
-        eligibleAssets,
-        totalRefundAmount,
+        eligibleAssets: eligibleAssets || [],
+        totalRefundAmount: totalAmount,
         processedCount: 0,
         processing: false
       });
-      
     } catch (error) {
-      console.error('❌ 자동 회수 대상 확인 실패:', error);
-      setAutoRefundStatus(prev => ({ ...prev, processing: false }));
-    }
-  };
-
-  // 실제 자동 회수 실행 함수
-  const executeAutoRefund = async () => {
-    if (!user || user.role !== 'admin' || !contract || !signer) return;
-    
-    const { eligibleAssets } = autoRefundStatus;
-    if (eligibleAssets.length === 0) {
-      alert('자동 회수 대상이 없습니다.');
-      return;
-    }
-    
-    setAutoRefundStatus(prev => ({ ...prev, processing: true }));
-    
-    try {
-      console.log('🚀 61일 자동 회수 실행 시작...');
-      
-      let processedCount = 0;
-      
-      for (const asset of eligibleAssets) {
-        try {
-          // 블록체인에서 실제 자동 회수 실행
-          const tx = await contract.executeAutoRefund(asset.tradeId, {
-            gasLimit: 300000
-          });
-          
-          const receipt = await tx.wait();
-          
-          console.log(`✅ 자동 회수 완료: ${asset.tradeId}`, {
-            transactionHash: receipt.transactionHash,
-            gasUsed: receipt.gasUsed.toString()
-          });
-          
-          processedCount++;
-          
-          // Supabase 업데이트
-          await supabase
-            .from('insurance_assets')
-            .update({ 
-              status: 'refunded',
-              refund_tx_hash: receipt.transactionHash,
-              refunded_at: new Date().toISOString()
-            })
-            .eq('id', asset.assetId);
-          
-        } catch (error) {
-          console.error(`❌ 자동 회수 실패: ${asset.tradeId}`, error);
-        }
-      }
-      
-      setAutoRefundStatus(prev => ({ 
-        ...prev, 
-        processedCount,
-        processing: false 
-      }));
-      
-      alert(`자동 회수 완료: ${processedCount}/${eligibleAssets.length}건 처리됨`);
-      
-    } catch (error) {
-      console.error('❌ 자동 회수 실행 실패:', error);
+      console.error('자동 환불 대상 확인 실패:', error);
       setAutoRefundStatus(prev => ({ ...prev, processing: false }));
     }
   };
