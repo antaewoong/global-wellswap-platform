@@ -1,11 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  output: 'export',
-  trailingSlash: true,
-  images: {
-    unoptimized: true
-  },
   typescript: {
     // 프로덕션 빌드 시 타입 에러 무시 (임시)
     ignoreBuildErrors: true
