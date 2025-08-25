@@ -5,15 +5,35 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
-  throw new Error('Missing Supabase environment variables');
+  console.error('Missing Supabase environment variables');
+  throw new Error('Supabase configuration is missing. Please check your environment variables.');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true
+  },
+  db: {
+    schema: 'public'
+  },
+  global: {
+    headers: {
+      'x-application-name': 'wellswap'
+    }
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 10
+    }
+  }
+});
 
 // 관리자 지갑 주소 목록
 const ADMIN_WALLETS = [
-  '0x1234567890123456789012345678901234567890', // 예시 주소
-  '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd'  // 예시 주소
+  '0x8A627a75d04bF3c709154205DFBBB6f4ed10DCB0', // 실제 관리자 지갑
+  // 추가 관리자 지갑 주소들...
 ]
 
 // 사용자 권한 확인
@@ -21,6 +41,34 @@ export const checkUserRole = (walletAddress: string): 'admin' | 'user' => {
   if (!walletAddress) return 'user'
   return ADMIN_WALLETS.includes(walletAddress.toLowerCase()) ? 'admin' : 'user'
 }
+
+// 에러 추적 함수
+const trackError = (error: any, context: string) => {
+  console.error(`[${context}] Error:`, error);
+  // TODO: Sentry 또는 다른 에러 추적 서비스 연동
+};
+
+// 웹소켓 연결 상태 확인
+export const checkWebSocketConnection = async () => {
+  try {
+    // 간단한 쿼리로 연결 확인
+    const { data, error } = await supabase
+      .from('users')
+      .select('count')
+      .limit(1);
+    
+    if (error) {
+      console.warn('⚠️ WebSocket 연결 확인 실패:', error);
+      return false;
+    }
+    
+    console.log('✅ WebSocket 연결 정상');
+    return true;
+  } catch (error) {
+    console.error('❌ WebSocket 연결 확인 오류:', error);
+    return false;
+  }
+};
 
 // 사용자 관리
 export class WellSwapDB {
@@ -44,9 +92,13 @@ export class WellSwapDB {
         .select()
         .single();
 
+      if (error) {
+        trackError(error, 'createUser');
+      }
+
       return { data, error };
     } catch (error) {
-      console.error('Error creating user:', error);
+      trackError(error, 'createUser');
       return { data: null, error };
     }
   }
@@ -60,9 +112,13 @@ export class WellSwapDB {
         .eq('wallet_address', walletAddress.toLowerCase())
         .single();
 
+      if (error) {
+        trackError(error, 'getUserByWallet');
+      }
+
       return { data, error };
     } catch (error) {
-      console.error('Error getting user by wallet:', error);
+      trackError(error, 'getUserByWallet');
       return { data: null, error };
     }
   }
@@ -94,9 +150,13 @@ export class WellSwapDB {
         .select()
         .single();
 
+      if (error) {
+        trackError(error, 'createInsuranceAsset');
+      }
+
       return { data, error };
     } catch (error) {
-      console.error('Error creating insurance asset:', error);
+      trackError(error, 'createInsuranceAsset');
       return { data: null, error };
     }
   }

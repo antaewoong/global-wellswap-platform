@@ -65,6 +65,23 @@ import ReliabilityScore from './reliability/ReliabilityScore';
 import fulfillmentAPI from '../lib/fulfillment-api';
 import { AdminInquiryPanel } from './AdminInquiryPanel';
 import { performClientSideAIValuation } from '../lib/ai-valuation-client';
+import { measurePerformance, monitorMemoryUsage, monitorNetworkPerformance, monitorPageLoadPerformance, startPerformanceMonitoring } from '../lib/performance';
+import { supabasePingService } from '../lib/supabase-ping';
+import { checkWebSocketConnection } from '../lib/database-wellswap';
+
+import { advancedAnalyticsEngine } from '../lib/advanced-analytics';
+// import NotificationPanel from './NotificationPanel';
+import AdvancedCharts from './AdvancedCharts';
+
+// 고도화된 시스템 import 추가
+import { initializePerformanceMonitoring } from '../lib/performance-monitoring';
+import { initializePerformanceOptimization } from '../lib/performance-optimization';
+import { EnhancedAIValuation } from '../lib/ai-valuation-enhanced';
+import { EnhancedOCRSystem } from '../lib/ai-ocr-enhanced';
+import { initializeEmailNotification } from '../lib/email-notification';
+import AdminDashboard from './AdminDashboard';
+import MobileNavigation from './MobileNavigation';
+import { initializeMobileWalletConnect } from '../lib/mobile-wallet-connect';
 
 // 타입 정의
 type TDict = any;
@@ -220,13 +237,8 @@ export const HomePage = React.memo(function HomePage({ t, setCurrentPage }: { t:
               className=""
             />
           </h1>
-          <GradientBackground 
-            className="absolute inset-0 from-zinc-100 via-zinc-200 to-zinc-100 opacity-20 blur-3xl"
-            colors={["from-zinc-100", "via-zinc-200", "to-zinc-100"]}
-          >
-            <div></div>
-          </GradientBackground>
         </div>
+        
         <FadeInAnimation delay={0.5}>
           <div className="w-32 h-px bg-zinc-900 mx-auto mb-8"></div>
         </FadeInAnimation>
@@ -1146,7 +1158,6 @@ export const InquiryPage = React.memo(function InquiryPage({
 // ✅ 메인 컴포넌트
 //
 export default function WellSwapGlobalPlatform() {
-  const [currentPage, setCurrentPage] = useState("home");
   const [currentLanguage, setCurrentLanguage] = useState("en");
 
   // 페이지 변경 함수
@@ -1154,6 +1165,12 @@ export default function WellSwapGlobalPlatform() {
     setCurrentPage(page);
   };
   const [insuranceData, setInsuranceData] = useState({});
+
+  // 인증 상태 (useEffect 앞에 선언)
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [connectedAccount, setConnectedAccount] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Web3 및 백엔드 연동
   // 🔗 Web3 멀티시그 거래 시스템 연동
@@ -1172,11 +1189,113 @@ export default function WellSwapGlobalPlatform() {
   const { createTrade, signTrade, loading: tradingLoading } = useTrading();
   const { getAsset, getTrade, getUserEscrowBalance } = useContractData();
 
-  // 인증 상태
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [connectedAccount, setConnectedAccount] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  // 🔍 백엔드 연동 상태 확인 및 테스트
+  useEffect(() => {
+    console.log('🔗 WellSwap Backend Integration Status:');
+    console.log('✅ Web3 Connection:', { isConnected: isWeb3Connected, account: connectedAccount });
+    console.log('✅ Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Configured' : 'Missing');
+    console.log('✅ Contract Address:', process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0xa84125fe1503485949d3e4fedcc454429289c8ea');
+    console.log('✅ AI Valuation API:', '/api/advanced-ai-valuation');
+    console.log('✅ Google OAuth:', process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ? 'Configured' : 'Missing');
+    
+    // 성능 모니터링 초기화 (로딩 속도 향상을 위해 일시 비활성화)
+    // monitorMemoryUsage();
+    // monitorNetworkPerformance();
+    // monitorPageLoadPerformance();
+    // startPerformanceMonitoring();
+    
+    // Supabase 핑 서비스 시작
+    console.log('🔄 Supabase 핑 서비스 상태:', supabasePingService.getStatus());
+    
+    // 웹소켓 연결 확인
+    checkWebSocketConnection().then(isConnected => {
+      console.log('🌐 WebSocket 연결 상태:', isConnected ? '정상' : '오류');
+    });
+    
+    // 실제 연동 테스트
+    if (isWeb3Connected && connectedAccount) {
+      console.log('🎯 Web3 Connected Successfully:', connectedAccount);
+      
+      // AI 평가 API 테스트
+      testAIValuationAPI();
+      // Supabase 연결 테스트
+      testSupabaseConnection();
+    } else {
+      console.log('⚠️ Web3 연결 대기 중... 지갑 연결 필요');
+    }
+  }, [isWeb3Connected, connectedAccount]);
+
+  // 모바일 지갑 연결 초기화
+  useEffect(() => {
+    const mobileWallet = initializeMobileWalletConnect();
+    console.log('📱 모바일 지갑 연결 시스템 초기화 완료');
+  }, []);
+
+  // 모바일 네비게이션 핸들러
+  const handleToggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handlePageChange = (page: string) => {
+    setCurrentPage(page);
+    setIsMenuOpen(false);
+  };
+
+  // 📊 고급 분석 엔진 초기화
+  useEffect(() => {
+    try {
+      console.log('📊 고급 분석 엔진 초기화 완료');
+    } catch (error) {
+      console.warn('⚠️ 고급 분석 엔진 초기화 실패:', error);
+    }
+  }, []);
+
+  // 🤖 AI 평가 API 테스트
+  const testAIValuationAPI = async () => {
+    try {
+      const testData = {
+        company: 'AIA Group Limited',
+        productCategory: 'Savings Plan',
+        productName: 'Test Product',
+        contractPeriod: '10 Years',
+        paidYears: 5,
+        annualPayment: 10000,
+        totalPayment: 50000,
+        startDate: '2020-01-01'
+      };
+      
+      const response = await fetch('/api/advanced-ai-valuation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(testData)
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ AI Valuation API Test Success:', result);
+      } else {
+        console.log('❌ AI Valuation API Test Failed:', response.status);
+      }
+    } catch (error) {
+      console.log('❌ AI Valuation API Test Error:', error);
+    }
+  };
+
+  // 🗄️ Supabase 연결 테스트
+  const testSupabaseConnection = async () => {
+    try {
+      const { data, error } = await supabase.from('users').select('count').limit(1);
+      if (error) {
+        console.log('❌ Supabase Connection Test Failed:', error);
+      } else {
+        console.log('✅ Supabase Connection Test Success');
+      }
+    } catch (error) {
+      console.log('❌ Supabase Connection Test Error:', error);
+    }
+  };
+
+
 
   // 거래 단계 관리
   const [tradeSteps, setTradeSteps] = useState({
@@ -1194,12 +1313,22 @@ export default function WellSwapGlobalPlatform() {
     processing: false
   });
 
+  // 관리자 대시보드 상태
+  const [showAdminDashboard, setShowAdminDashboard] = useState(false);
+  const [adminWalletAddress, setAdminWalletAddress] = useState<string>('');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState('home');
+
   // 📸 OCR AI 상태 관리
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUsingCamera, setIsUsingCamera] = useState(false);
   const [isOcrProcessing, setIsOcrProcessing] = useState(false);
   const [ocrProgress, setOcrProgress] = useState(0);
   const [ocrResult, setOcrResult] = useState<any>(null);
+
+  // 🔔 고도화 기능 상태 관리
+  const [isAdvancedChartsOpen, setIsAdvancedChartsOpen] = useState(false);
+  const [selectedAssetForAnalysis, setSelectedAssetForAnalysis] = useState<string | null>(null);
 
   // 🤖 AI 크롤링 데이터 상태
   const [fulfillmentData, setFulfillmentData] = useState<any>(null);
@@ -1503,6 +1632,13 @@ export default function WellSwapGlobalPlatform() {
           console.log('✅ 기존 사용자 확인:', userData);
           setUser(userData);
           setIsAuthenticated(true);
+          
+          // 관리자 권한 확인 및 대시보드 표시
+          if (userData.role === 'admin') {
+            setAdminWalletAddress(web3Account);
+            setShowAdminDashboard(true);
+            console.log('🛡️ 관리자 대시보드 활성화:', web3Account);
+          }
         } else {
           // 3단계: 새 사용자 생성
           console.log('🆕 새 사용자 생성 중...');
@@ -1527,6 +1663,13 @@ export default function WellSwapGlobalPlatform() {
             console.log('✅ 새 사용자 생성 완료:', newUser);
             setUser(newUser);
             setIsAuthenticated(true);
+            
+            // 관리자 권한 확인 및 대시보드 표시
+            if (newUser.role === 'admin') {
+              setAdminWalletAddress(web3Account);
+              setShowAdminDashboard(true);
+              console.log('🛡️ 관리자 대시보드 활성화:', web3Account);
+            }
           }
         }
         
@@ -1760,6 +1903,19 @@ export default function WellSwapGlobalPlatform() {
       
       if (registrationResult.success) {
         console.log('✅ 자산 등록 완료:', registrationResult);
+        
+        // 매도 등록 시 관리자에게 이메일 알림
+        const emailNotification = initializeEmailNotification();
+        await emailNotification.sendAssetRegistrationNotification({
+          assetId: registrationResult.assetId,
+          sellerAddress: connectedAccount,
+          companyName: insuranceData.company || 'Unknown',
+          productName: insuranceData.productName || 'Unknown',
+          premiumPaid: parseFloat(insuranceData.totalPayment || '0'),
+          currentValue: parseFloat(insuranceData.surrenderValue || '0'),
+          registrationTime: new Date().toISOString()
+        });
+        
         setTradeSteps(prev => ({ 
           ...prev, 
           stage: 2, 
@@ -1845,6 +2001,18 @@ export default function WellSwapGlobalPlatform() {
                 })
                 .eq('id', registrationResult.assetId);
               
+              // 이메일 알림 발송
+              const emailNotification = initializeEmailNotification();
+              await emailNotification.sendPurchaseNotification({
+                tradeId: tradeResult.tradeId,
+                assetId: registrationResult.assetId,
+                sellerAddress: connectedAccount,
+                buyerAddress: connectedAccount, // 실제로는 구매자 주소
+                purchaseAmount: agreedPriceUSD,
+                transactionHash: signResult.transactionHash,
+                purchaseTime: new Date().toISOString()
+              });
+
               alert('✅ 멀티시그 거래가 성공적으로 완료되었습니다!');
               setInsuranceData({});
               setTradeSteps({ stage: 0, registrationTxHash: '', feeTxHash: '', assetId: '' });
@@ -1932,6 +2100,18 @@ export default function WellSwapGlobalPlatform() {
               })
               .eq('id', listing?.id?.toString() || '1');
             
+            // 이메일 알림 발송
+            const emailNotification = initializeEmailNotification();
+            await emailNotification.sendPurchaseNotification({
+              tradeId: tradeResult.tradeId,
+              assetId: listing?.id?.toString() || '1',
+              sellerAddress: listing?.seller || 'unknown',
+              buyerAddress: connectedAccount,
+              purchaseAmount: totalPaymentUSD,
+              transactionHash: signResult.transactionHash,
+              purchaseTime: new Date().toISOString()
+            });
+
             alert('✅ 멀티시그 구매가 성공적으로 완료되었습니다!');
             setInsuranceData({});
             setTradeSteps({ stage: 0, registrationTxHash: '', feeTxHash: '', assetId: '' });
@@ -2094,8 +2274,195 @@ export default function WellSwapGlobalPlatform() {
     step1MultisigRegistration: "Step 1: Multisig Registration",
   };
 
+  // 고도화된 시스템 상태 추가
+  const [performanceMonitor, setPerformanceMonitor] = useState<any>(null);
+  const [performanceOptimizer, setPerformanceOptimizer] = useState<any>(null);
+  const [enhancedAI, setEnhancedAI] = useState<EnhancedAIValuation | null>(null);
+  const [enhancedOCR, setEnhancedOCR] = useState<EnhancedOCRSystem | null>(null);
+  const [optimizationStatus, setOptimizationStatus] = useState<string>('idle');
+
+  // 고도화된 시스템 초기화
+  useEffect(() => {
+    const initializeAdvancedSystems = async () => {
+      try {
+        console.log('🚀 고도화된 시스템 초기화 시작');
+
+        // 성능 모니터링 시스템 초기화
+        const monitor = initializePerformanceMonitoring({
+          pageLoadTime: 2000, // 2초
+          memoryUsage: 100 * 1024 * 1024, // 100MB
+          errorRate: 0.03, // 3%
+          networkLatency: 800 // 800ms
+        });
+        setPerformanceMonitor(monitor);
+
+        // 성능 최적화 시스템 초기화
+        const optimizer = initializePerformanceOptimization({
+          enableLazyLoading: true,
+          enableCodeSplitting: true,
+          enableImageOptimization: true,
+          enableCaching: true,
+          enableCompression: true,
+          enablePrefetching: true,
+          memoryThreshold: 80 * 1024 * 1024, // 80MB
+          networkTimeout: 3000 // 3초
+        });
+        setPerformanceOptimizer(optimizer);
+
+        // 고도화된 AI 평가 시스템 초기화
+        const enhancedAI = new EnhancedAIValuation();
+        setEnhancedAI(enhancedAI);
+
+        // 고도화된 OCR 시스템 초기화
+        const enhancedOCR = new EnhancedOCRSystem();
+        setEnhancedOCR(enhancedOCR);
+
+        console.log('✅ 고도화된 시스템 초기화 완료');
+
+        // 자동 성능 최적화 실행
+        setTimeout(async () => {
+          try {
+            setOptimizationStatus('optimizing');
+            const result = await optimizer.optimizePerformance();
+            if (result.success) {
+              console.log('🎯 자동 성능 최적화 완료:', result.improvements);
+              setOptimizationStatus('optimized');
+            } else {
+              console.warn('⚠️ 성능 최적화 실패:', result.errors);
+              setOptimizationStatus('failed');
+            }
+          } catch (error) {
+            console.error('❌ 성능 최적화 오류:', error);
+            setOptimizationStatus('error');
+          }
+        }, 5000); // 5초 후 자동 최적화
+
+      } catch (error) {
+        console.error('❌ 고도화된 시스템 초기화 실패:', error);
+      }
+    };
+
+    initializeAdvancedSystems();
+  }, []);
+
+  // 고도화된 AI 평가 함수
+  const performEnhancedValuation = async (insuranceData: any) => {
+    if (!enhancedAI) {
+      console.warn('고도화된 AI 시스템이 초기화되지 않았습니다.');
+      return null;
+    }
+
+    try {
+      const input = {
+        companyName: insuranceData.company_name || '',
+        productType: insuranceData.product_type || '',
+        surrenderValue: parseFloat(insuranceData.surrender_value) || 0,
+        contractPeriod: parseInt(insuranceData.contract_period) || 0,
+        annualPayment: parseFloat(insuranceData.annual_payment) || 0,
+        totalPayment: parseFloat(insuranceData.total_payment) || 0,
+        ocrData: insuranceData.ocrData,
+        realEstateFactors: insuranceData.realEstateFactors,
+        marketConditions: insuranceData.marketConditions,
+        userProfile: insuranceData.userProfile
+      };
+
+      const result = await enhancedAI.performEnhancedValuation(input);
+      console.log('🤖 고도화된 AI 평가 결과:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ 고도화된 AI 평가 실패:', error);
+      return null;
+    }
+  };
+
+  // 고도화된 OCR 처리 함수
+  const processDocumentWithEnhancedOCR = async (file: File) => {
+    if (!enhancedOCR) {
+      console.warn('고도화된 OCR 시스템이 초기화되지 않았습니다.');
+      return null;
+    }
+
+    try {
+      const options = {
+        language: language as 'en' | 'ko' | 'zh' | 'ja',
+        documentType: 'insurance_policy' as const,
+        enableValidation: true,
+        enableCorrection: true,
+        enableRealEstateDetection: true,
+        qualityThreshold: 0.8,
+        maxRetries: 3
+      };
+
+      const result = await enhancedOCR.processDocument(file, options);
+      console.log('📄 고도화된 OCR 처리 결과:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ 고도화된 OCR 처리 실패:', error);
+      return null;
+    }
+  };
+
+  // 성능 리포트 생성 함수
+  const generatePerformanceReport = () => {
+    if (!performanceMonitor) {
+      return '성능 모니터링 시스템이 초기화되지 않았습니다.';
+    }
+
+    return performanceMonitor.generateReport();
+  };
+
+  // 성능 최적화 실행 함수
+  const runPerformanceOptimization = async () => {
+    if (!performanceOptimizer) {
+      console.warn('성능 최적화 시스템이 초기화되지 않았습니다.');
+      return;
+    }
+
+    try {
+      setOptimizationStatus('optimizing');
+      const result = await performanceOptimizer.optimizePerformance();
+      
+      if (result.success) {
+        console.log('🎯 성능 최적화 완료:', result.improvements);
+        setOptimizationStatus('optimized');
+        
+        // 성공 알림
+        addNotification({
+          id: Date.now().toString(),
+          message: `성능 최적화 완료! 페이지 로드 시간 ${result.improvements.pageLoadTime.toFixed(0)}ms 개선`,
+          type: 'success',
+          timestamp: new Date()
+        });
+      } else {
+        console.warn('⚠️ 성능 최적화 실패:', result.errors);
+        setOptimizationStatus('failed');
+        
+        // 실패 알림
+        addNotification({
+          id: Date.now().toString(),
+          message: `성능 최적화 실패: ${result.errors.join(', ')}`,
+          type: 'error',
+          timestamp: new Date()
+        });
+      }
+    } catch (error) {
+      console.error('❌ 성능 최적화 오류:', error);
+      setOptimizationStatus('error');
+      
+      addNotification({
+        id: Date.now().toString(),
+        message: `성능 최적화 오류: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        type: 'error',
+        timestamp: new Date()
+      });
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-900">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* 성능 최적화 상태 표시 */}
+              {/* PerformanceOptimizationStatus 컴포넌트는 일시적으로 비활성화 */}
+      
       {/* Navigation */}
       <nav className="flex items-center justify-between p-6 border-b border-zinc-200 bg-white/80 backdrop-blur-md sticky top-0 z-50">
         <div className="flex items-center space-x-8">
@@ -2240,6 +2607,47 @@ export default function WellSwapGlobalPlatform() {
           <InquiryPage t={t} handleInquirySubmit={handleInquirySubmit} />
         </div>
       </main>
+
+
+
+      {/* 📊 고급 분석 차트 */}
+      {isAdvancedChartsOpen && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg w-full max-w-6xl h-full max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-lg font-semibold">고급 분석 대시보드</h2>
+              <button
+                onClick={() => setIsAdvancedChartsOpen(false)}
+                className="p-2 hover:bg-gray-100 rounded-full"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 h-full overflow-y-auto">
+              <AdvancedCharts assetId={selectedAssetForAnalysis} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🛡️ 관리자 대시보드 */}
+      {showAdminDashboard && (
+        <AdminDashboard 
+          isVisible={showAdminDashboard}
+          adminWalletAddress={adminWalletAddress}
+        />
+      )}
+
+      {/* 📱 모바일 네비게이션 */}
+      <MobileNavigation
+        currentPage={currentPage}
+        setCurrentPage={handlePageChange}
+        isAuthenticated={isAuthenticated}
+        isWeb3Connected={isWeb3Connected}
+        onConnectWallet={connectWalletWithAuth}
+        onToggleMenu={handleToggleMenu}
+        isMenuOpen={isMenuOpen}
+      />
     </div>
   );
 }

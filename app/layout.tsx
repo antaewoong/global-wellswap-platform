@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -13,57 +13,30 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "WellSwap - 혁신적인 Web3 보험자산 거래 플랫폼",
-  description: "AI 기반 보험자산 거래 플랫폼. 홍콩, 싱가포르, 글로벌 시장에서 보험 상품을 안전하고 효율적으로 거래하세요. 블록체인 기반 멀티시그 보안과 실시간 AI 가치평가를 제공합니다.",
-  keywords: "보험자산, Web3, 블록체인, AI 가치평가, 홍콩 보험, 싱가포르 보험, 멀티시그, 보험 거래 플랫폼",
-  authors: [{ name: "WellSwap Team" }],
-  creator: "WellSwap",
-  publisher: "WellSwap",
+  title: "WellSwap - 글로벌 보험 자산 거래 플랫폼",
+  description: "AI 기반 보험 자산 거래 플랫폼 - 홍콩, 한국, 싱가포르",
+  manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
   formatDetection: {
-    email: false,
-    address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://wellswap.netlify.app'),
-  alternates: {
-    canonical: '/',
-  },
-  openGraph: {
-    title: "WellSwap - 혁신적인 Web3 보험자산 거래 플랫폼",
-    description: "AI 기반 보험자산 거래 플랫폼. 홍콩, 싱가포르, 글로벌 시장에서 보험 상품을 안전하고 효율적으로 거래하세요.",
-    url: 'https://wellswap.netlify.app',
-    siteName: 'WellSwap',
-    images: [
-      {
-        url: '/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'WellSwap - Web3 보험자산 거래 플랫폼',
-      },
-    ],
-    locale: 'ko_KR',
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: "WellSwap - 혁신적인 Web3 보험자산 거래 플랫폼",
-    description: "AI 기반 보험자산 거래 플랫폼. 블록체인 기반 멀티시그 보안과 실시간 AI 가치평가를 제공합니다.",
-    images: ['/og-image.png'],
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
-  verification: {
-    google: 'your-google-verification-code',
-  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: "#2c5aa0",
 };
 
 export default function RootLayout({
@@ -72,11 +45,60 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    <html lang="ko" className={`${geistSans.variable} ${geistMono.variable}`}>
+      <head>
+        <meta name="application-name" content="WellSwap" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="WellSwap" />
+        <meta name="description" content="AI 기반 보험 자산 거래 플랫폼" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="msapplication-config" content="/browserconfig.xml" />
+        <meta name="msapplication-TileColor" content="#2c5aa0" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico" />
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="mask-icon" href="/icon-192.png" color="#2c5aa0" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:url" content="https://wellswap.com" />
+        <meta name="twitter:title" content="WellSwap" />
+        <meta name="twitter:description" content="AI 기반 보험 자산 거래 플랫폼" />
+        <meta name="twitter:image" content="/og-image.png" />
+        <meta name="twitter:creator" content="@wellswap" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="WellSwap" />
+        <meta property="og:description" content="AI 기반 보험 자산 거래 플랫폼" />
+        <meta property="og:site_name" content="WellSwap" />
+        <meta property="og:url" content="https://wellswap.com" />
+        <meta property="og:image" content="/og-image.png" />
+      </head>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
+        
+        {/* PWA Service Worker 등록 */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                      console.log('SW registered: ', registration);
+                    })
+                    .catch(function(registrationError) {
+                      console.log('SW registration failed: ', registrationError);
+                    });
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );

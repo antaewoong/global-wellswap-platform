@@ -1,26 +1,304 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* 모바일 최적화 CSS */
+@layer base {
+  /* 기본 폰트 크기 조정 */
+  html {
+    font-size: 16px;
+  }
+  
+  /* 모바일에서 터치 최적화 */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* 스크롤바 최적화 */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #555;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  /* 모바일 최적화 컨테이너 */
+  .mobile-container {
+    @apply px-4 py-2;
+  }
+  
+  .tablet-container {
+    @apply px-6 py-4;
+  }
+  
+  .desktop-container {
+    @apply px-8 py-6;
+  }
+  
+  /* 터치 친화적 버튼 */
+  .mobile-button {
+    @apply min-h-[44px] px-4 py-3 text-base font-medium rounded-lg;
+    @apply transition-all duration-200 ease-in-out;
+    @apply active:scale-95;
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+  
+  .mobile-button-primary {
+    @apply mobile-button bg-blue-600 text-white;
+    @apply hover:bg-blue-700 focus:ring-blue-500;
+  }
+  
+  .mobile-button-secondary {
+    @apply mobile-button bg-gray-200 text-gray-900;
+    @apply hover:bg-gray-300 focus:ring-gray-500;
+  }
+  
+  /* 모바일 카드 */
+  .mobile-card {
+    @apply bg-white rounded-xl shadow-lg p-4;
+    @apply border border-gray-200;
+  }
+  
+  /* 모바일 입력 필드 */
+  .mobile-input {
+    @apply w-full px-4 py-3 text-base;
+    @apply border border-gray-300 rounded-lg;
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+    @apply placeholder-gray-400;
+  }
+  
+  /* 모바일 네비게이션 */
+  .mobile-nav {
+    @apply fixed bottom-0 left-0 right-0;
+    @apply bg-white border-t border-gray-200;
+    @apply px-4 py-2;
+    @apply z-50;
+  }
+  
+  /* 모바일 헤더 */
+  .mobile-header {
+    @apply sticky top-0 z-40;
+    @apply bg-white border-b border-gray-200;
+    @apply px-4 py-3;
+  }
+  
+  /* 모바일 그리드 */
+  .mobile-grid {
+    @apply grid gap-4;
+    @apply grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+  }
+  
+  /* 모바일 테이블 */
+  .mobile-table {
+    @apply w-full overflow-x-auto;
+  }
+  
+  .mobile-table table {
+    @apply min-w-full divide-y divide-gray-200;
+  }
+  
+  .mobile-table th {
+    @apply px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+  }
+  
+  .mobile-table td {
+    @apply px-3 py-2 text-sm text-gray-900;
+  }
+  
+  /* 모바일 모달 */
+  .mobile-modal {
+    @apply fixed inset-0 z-50;
+    @apply flex items-center justify-center;
+    @apply bg-black bg-opacity-50;
+    @apply p-4;
+  }
+  
+  .mobile-modal-content {
+    @apply bg-white rounded-xl;
+    @apply w-full max-w-md max-h-[90vh];
+    @apply overflow-y-auto;
+  }
+  
+  /* 모바일 로딩 스피너 */
+  .mobile-spinner {
+    @apply animate-spin rounded-full;
+    @apply border-2 border-gray-300 border-t-blue-600;
+  }
+  
+  /* 모바일 토스트 */
+  .mobile-toast {
+    @apply fixed top-4 right-4 z-50;
+    @apply bg-white rounded-lg shadow-lg;
+    @apply px-4 py-3;
+    @apply border border-gray-200;
+    @apply max-w-sm;
+  }
+}
+
+@layer utilities {
+  /* 모바일 전용 유틸리티 */
+  .mobile-only {
+    @apply block md:hidden;
+  }
+  
+  .desktop-only {
+    @apply hidden md:block;
+  }
+  
+  .tablet-only {
+    @apply hidden sm:block lg:hidden;
+  }
+  
+  /* 터치 영역 최적화 */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  /* 안전 영역 */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .safe-area-left {
+    padding-left: env(safe-area-inset-left);
+  }
+  
+  .safe-area-right {
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* 반응형 브레이크포인트별 스타일 */
+@media (max-width: 640px) {
+  /* 모바일 스타일 */
+  .container {
+    @apply px-4;
+  }
+  
+  .text-2xl {
+    font-size: 1.5rem;
+  }
+  
+  .text-xl {
+    font-size: 1.25rem;
+  }
+  
+  .text-lg {
+    font-size: 1.125rem;
+  }
+  
+  /* 모바일에서 버튼 크기 조정 */
+  .mobile-button {
+    @apply min-h-[48px] px-6 py-3 text-base;
+  }
+  
+  /* 모바일에서 카드 패딩 조정 */
+  .mobile-card {
+    @apply p-3;
+  }
+  
+  /* 모바일에서 입력 필드 크기 조정 */
+  .mobile-input {
+    @apply px-3 py-3 text-base;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  /* 태블릿 스타일 */
+  .container {
+    @apply px-6;
+  }
+  
+  .mobile-button {
+    @apply min-h-[44px] px-5 py-2.5 text-sm;
+  }
+  
+  .mobile-card {
+    @apply p-4;
+  }
+  
+  .mobile-input {
+    @apply px-4 py-2.5 text-sm;
+  }
+}
+
+@media (min-width: 1025px) {
+  /* 데스크탑 스타일 */
+  .container {
+    @apply px-8;
+  }
+  
+  .mobile-button {
+    @apply min-h-[40px] px-4 py-2 text-sm;
+  }
+  
+  .mobile-card {
+    @apply p-6;
+  }
+  
+  .mobile-input {
+    @apply px-3 py-2 text-sm;
+  }
+}
+
+/* 다크 모드 지원 */
+@media (prefers-color-scheme: dark) {
+  .mobile-card {
+    @apply bg-gray-800 border-gray-700;
+  }
+  
+  .mobile-input {
+    @apply bg-gray-800 border-gray-600 text-white;
+    @apply placeholder-gray-400;
+  }
+  
+  .mobile-button-secondary {
+    @apply bg-gray-700 text-gray-200;
+    @apply hover:bg-gray-600;
+  }
+}
+
+/* 접근성 개선 */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+  .mobile-button {
+    @apply border-2 border-current;
+  }
+  
+  .mobile-input {
+    @apply border-2 border-current;
+  }
+}
+
+/* 인쇄 스타일 */
+@media print {
+  .mobile-nav,
+  .mobile-modal,
+  .mobile-toast {
+    display: none !important;
+  }
 }
