@@ -1,5 +1,9 @@
 'use client';
 import dynamic from "next/dynamic";
+import { useMobileOptimization } from "../hooks/useMobileOptimization";
+import { MobileOptimizedButton } from "./ui/MobileOptimizedButton";
+import { MobileOptimizedCard } from "./ui/MobileOptimizedCard";
+import { MobileOptimizedInput } from "./ui/MobileOptimizedInput";
 
 import { connectMobileWallet, isMobile } from "../lib/mobile-wallet-connect";
 // WellSwapComplete.tsx — Refactored with Full Functionality
@@ -279,20 +283,24 @@ export const HomePage = React.memo(function HomePage({ t, setCurrentPage }: { t:
         
         <FadeInAnimation delay={1.4}>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8">
-            <AnimatedButton
+            <MobileOptimizedButton
               onClick={() => setCurrentPage('sell')}
-              className="px-8 py-4 bg-zinc-900 text-zinc-50 font-light hover:bg-zinc-800 transition-all duration-300"
-              style={{ clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 100%, 0 100%)' }}
+              variant="primary"
+              size="large"
+              fullWidth={mobileOptimization.isMobile}
+              className="font-light"
             >
               {t.getStarted}
-            </AnimatedButton>
-            <AnimatedButton
+            </MobileOptimizedButton>
+            <MobileOptimizedButton
               onClick={() => setCurrentPage('buy')}
-              className="px-8 py-4 border border-zinc-300 text-zinc-700 font-light hover:border-zinc-400 hover:bg-zinc-50 transition-colors"
-              style={{ clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 100%, 0 100%)' }}
+              variant="outline"
+              size="large"
+              fullWidth={mobileOptimization.isMobile}
+              className="font-light"
             >
               {t.learnMore}
-            </AnimatedButton>
+            </MobileOptimizedButton>
           </div>
         </FadeInAnimation>
       </div>
@@ -329,30 +337,39 @@ export const HomePage = React.memo(function HomePage({ t, setCurrentPage }: { t:
       <StaggerContainer staggerDelay={0.3}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
           <StaggerItem>
-            <AnimatedCard className="p-6 md:p-8 border border-zinc-200 bg-zinc-50 text-center space-y-4"
-                 style={{ clipPath: 'polygon(0 0, calc(100% - 16px) 0, 100% 100%, 0 100%)' }}>
+            <MobileOptimizedCard
+              variant="elevated"
+              className="p-6 md:p-8 text-center space-y-4"
+              interactive
+            >
               <BarChart3 className="h-10 w-10 md:h-12 md:w-12 text-zinc-700 mx-auto" />
               <h3 className="text-lg md:text-xl font-light text-zinc-900">{t.aiValuation}</h3>
               <p className="text-sm md:text-base text-zinc-600 font-light">{t.aiValuationDesc}</p>
-            </AnimatedCard>
+            </MobileOptimizedCard>
           </StaggerItem>
           
           <StaggerItem>
-            <AnimatedCard className="p-6 md:p-8 border border-zinc-200 bg-zinc-50 text-center space-y-4"
-                 style={{ clipPath: 'polygon(0 0, calc(100% - 16px) 0, 100% 100%, 0 100%)' }}>
+            <MobileOptimizedCard
+              variant="elevated"
+              className="p-6 md:p-8 text-center space-y-4"
+              interactive
+            >
               <Globe className="h-10 w-10 md:h-12 md:w-12 text-zinc-700 mx-auto" />
               <h3 className="text-lg md:text-xl font-light text-zinc-900">{t.globalMarket}</h3>
               <p className="text-sm md:text-base text-zinc-600 font-light">{t.globalMarketDesc}</p>
-            </AnimatedCard>
+            </MobileOptimizedCard>
           </StaggerItem>
           
           <StaggerItem>
-            <AnimatedCard className="p-6 md:p-8 border border-zinc-200 bg-zinc-50 text-center space-y-4"
-                 style={{ clipPath: 'polygon(0 0, calc(100% - 16px) 0, 100% 100%, 0 100%)' }}>
+            <MobileOptimizedCard
+              variant="elevated"
+              className="p-6 md:p-8 text-center space-y-4"
+              interactive
+            >
               <Shield className="h-10 w-10 md:h-12 md:w-12 text-zinc-700 mx-auto" />
               <h3 className="text-lg md:text-xl font-light text-zinc-900">{t.secureTrading}</h3>
               <p className="text-sm md:text-base text-zinc-600 font-light">{t.secureTradingDesc}</p>
-            </AnimatedCard>
+            </MobileOptimizedCard>
           </StaggerItem>
         </div>
       </StaggerContainer>
@@ -551,26 +568,26 @@ export const SellInsurancePage = React.memo(function SellInsurancePage({
 
             {/* 상품명 */}
             <div>
-              <label className="block text-sm font-light text-zinc-600 mb-2">{t.productName}</label>
-              <SafeInput
+              <MobileOptimizedInput
+                label={t.productName}
                 type="text"
                 value={insuranceData.productName}
                 onChange={(value) => setInsuranceData((prev: any) => ({ ...prev, productName: value }))}
                 placeholder={t.enterProductName}
-                className="w-full p-4 border border-zinc-200 bg-zinc-50 text-zinc-900 font-light focus:outline-none focus:border-zinc-400 transition-colors"
-                style={{ clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 100%, 0 100%)' }}
+                required
               />
             </div>
 
             {/* 계약일 */}
             <div>
-              <label className="block text-sm font-light text-zinc-600 mb-2">{t.contractDate}</label>
-              <SafeInput
+              <MobileOptimizedInput
+                label={t.contractDate}
                 type="text"
                 value={insuranceData.startDate}
                 onChange={(value) => setInsuranceData((prev: any) => ({ ...prev, startDate: value }))}
                 placeholder="YYYY-MM-DD"
-                className="w-full p-4 border border-zinc-200 bg-zinc-50 text-zinc-900 font-light focus:outline-none focus:border-zinc-400 transition-colors"
+                required
+              />
                 style={{ clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 100%, 0 100%)' }}
                 pattern="\\d{4}-\\d{2}-\\d{2}"
                 maxLength={10}
@@ -871,13 +888,16 @@ export const BuyInsurancePage = React.memo(function BuyInsurancePage({
               </span>
             </div>
             {(!isAuthenticated || !isWeb3Connected) && (
-              <button
+              <MobileOptimizedButton
                 onClick={connectWalletWithAuth}
                 disabled={isLoading}
-                className="px-4 py-2 bg-zinc-900 text-zinc-50 font-light text-sm hover:bg-zinc-800 transition-colors disabled:opacity-50"
+                variant="primary"
+                size="medium"
+                loading={isLoading}
+                className="font-light text-sm"
               >
                 {isLoading ? 'Connecting...' : 'Connect Wallet'}
-              </button>
+              </MobileOptimizedButton>
             )}
           </div>
         </div>
@@ -973,18 +993,25 @@ export const BuyInsurancePage = React.memo(function BuyInsurancePage({
             <div className="space-y-3">
               {listing.status === 'available' ? (
                 <div className="space-y-3">
-                  <button
+                  <MobileOptimizedButton
                     onClick={() => handleBuySubmitWithStats(listing)}
                     disabled={!isAuthenticated || !isWeb3Connected || isLoading}
-                    className="w-full p-3 bg-zinc-900 text-zinc-50 text-sm font-medium hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded"
+                    variant="primary"
+                    size="large"
+                    fullWidth
+                    loading={isLoading}
+                    className="text-sm font-medium"
                   >
                     {isLoading ? 'Processing...' : 
                      !isAuthenticated || !isWeb3Connected ? 'Connect Wallet to Purchase' : 
                      'Purchase'}
-                  </button>
-                  <button
+                  </MobileOptimizedButton>
+                  <MobileOptimizedButton
                     onClick={() => changePage('inquiry')}
-                    className="w-full p-3 border border-zinc-300 text-zinc-700 text-sm font-medium hover:border-zinc-400 hover:bg-zinc-100 transition-colors rounded"
+                    variant="outline"
+                    size="large"
+                    fullWidth
+                    className="text-sm font-medium"
                   >
                     1:1 Inquiry
                   </button>
@@ -1180,6 +1207,13 @@ export const InquiryPage = React.memo(function InquiryPage({
 // ✅ 메인 컴포넌트
 //
 export default function WellSwapGlobalPlatform() {
+  // 모바일 최적화 훅 사용
+  const mobileOptimization = useMobileOptimization({
+    enableSmoothScrolling: true,
+    enableTouchFeedback: true,
+    enablePerformanceMode: true
+  });
+
   const [currentPage, setCurrentPage] = useState("home");
   const [currentLanguage, setCurrentLanguage] = useState("en");
 
