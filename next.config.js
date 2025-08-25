@@ -1,17 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  experimental: {
-    // 빌드 캐싱 활성화
-    turbo: {
-      rules: {
-        '*.svg': {
-          loaders: ['@svgr/webpack'],
-          as: '*.js',
-        },
-      },
-    },
-  },
   typescript: {
     // 프로덕션 빌드 시 타입 에러 무시 (임시)
     ignoreBuildErrors: true

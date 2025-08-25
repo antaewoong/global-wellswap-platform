@@ -12,6 +12,7 @@
     "@supabase/supabase-js": "^2.55.0",
     "@tailwindcss/postcss": "^4.1.12",
     "@types/uuid": "^10.0.0",
+    "tailwindcss": "^4.1.12",
     "autoprefixer": "^10.4.21",
     "ethers": "^5.8.0",
     "framer-motion": "^12.23.12",
@@ -22,7 +23,8 @@
     "react-dom": "19.1.0",
     "react-intersection-observer": "^9.16.0",
     "tesseract.js": "^6.0.1",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "jiti": "^1.21.0"
   },
   "devDependencies": {
     "@types/node": "^20.19.11",
