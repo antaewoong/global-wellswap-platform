@@ -1082,7 +1082,7 @@ export const InquiryPage = React.memo(function InquiryPage({
                 <SafeInput
                   type="text"
                   value={inquiryData.name}
-                  onChange={(value: string) => setInquiryData(prev => ({ ...prev, name: value }))}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInquiryData(prev => ({ ...prev, name: e.target.value }))}
                   placeholder="Enter your name"
                   className="w-full p-4 border border-zinc-200 bg-zinc-50 text-zinc-900 font-light focus:outline-none focus:border-zinc-400 transition-colors"
                   style={{ clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 100%, 0 100%)' }}
