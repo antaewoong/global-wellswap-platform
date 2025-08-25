@@ -47,7 +47,7 @@ class SupabasePingService {
         .limit(1);
       
       if (error) {
-        console.warn('⚠️ Supabase 핑 쿼리 실패:', error);
+        console.warn('⚠️ Supabase 핑 쿼리 실패:', error.message);
         // 재연결 시도
         await this.reconnect();
       } else {
@@ -58,7 +58,7 @@ class SupabasePingService {
       await this.logPingStatus();
       
     } catch (error) {
-      console.error('❌ Supabase 핑 실패:', error);
+      console.error('❌ Supabase 핑 실패:', error instanceof Error ? error.message : 'Unknown error');
       await this.reconnect();
     }
   }

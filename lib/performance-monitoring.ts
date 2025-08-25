@@ -30,10 +30,10 @@ class AdvancedPerformanceMonitor {
 
   constructor(thresholds?: Partial<AlertThresholds>) {
     this.thresholds = {
-      pageLoadTime: 3000, // 3 seconds
-      memoryUsage: 50 * 1024 * 1024, // 50MB
-      errorRate: 0.05, // 5%
-      networkLatency: 1000, // 1 second
+      pageLoadTime: 5000, // 5 seconds (더 관대하게)
+      memoryUsage: 200 * 1024 * 1024, // 200MB (더 관대하게)
+      errorRate: 0.1, // 10% (더 관대하게)
+      networkLatency: 2000, // 2 seconds (더 관대하게)
       ...thresholds
     };
     this.sessionStartTime = Date.now();
@@ -153,14 +153,18 @@ class AdvancedPerformanceMonitor {
   private monitorMemoryUsage(): void {
     if (!this.isMonitoring) return;
 
-    if ('memory' in performance) {
-      const memory = (performance as any).memory;
-      const metrics: Partial<PerformanceMetrics> = {
-        memoryUsage: memory.usedJSHeapSize
-      };
+    try {
+      if ('memory' in performance) {
+        const memory = (performance as any).memory;
+        const metrics: Partial<PerformanceMetrics> = {
+          memoryUsage: memory.usedJSHeapSize
+        };
 
-      this.addMetrics(metrics);
-      this.checkThresholds(metrics);
+        this.addMetrics(metrics);
+        this.checkThresholds(metrics);
+      }
+    } catch (error) {
+      // 메모리 모니터링 실패 시 무시 (기능 유지)
     }
 
     setTimeout(() => this.monitorMemoryUsage(), 10000);
