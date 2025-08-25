@@ -32,8 +32,7 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
 
 // 관리자 지갑 주소 목록
 const ADMIN_WALLETS = [
-  '0x8A627a75d04bF3c709154205DFBBB6f4ed10DCB0', // 실제 관리자 지갑
-  // 추가 관리자 지갑 주소들...
+  '0x8A627a75d04bF3c709154205DFBBB6f4ed10DCB0' // 실제 관리자 지갑 주소
 ]
 
 // 사용자 권한 확인

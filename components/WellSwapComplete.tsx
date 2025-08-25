@@ -1,6 +1,23 @@
 'use client';
+import dynamic from "next/dynamic";
 
+import { connectMobileWallet, isMobile } from "../lib/mobile-wallet-connect";
 // WellSwapComplete.tsx — Refactored with Full Functionality
+// 동적 로딩 - 헤비 컴포넌트들
+const OCR = dynamic(() => import("./AdvancedOCR.tsx"), { 
+  ssr: false, 
+  loading: () => <div className="p-4 text-center text-zinc-500">Loading OCR...</div> 
+});
+
+const Admin = dynamic(() => import("./AdminInquiryPanel.tsx"), { 
+  ssr: false, 
+  loading: () => <div className="p-4 text-center text-zinc-500">Loading Admin Panel...</div> 
+});
+
+const Charts = dynamic(() => import("./AdvancedOCR.tsx"), { 
+  ssr: false, 
+  loading: () => <div className="p-4 text-center text-zinc-500">Loading Charts...</div> 
+});
 // 4개 페이지 컴포넌트를 최상단으로 호이스팅 + React.memo
 // SafeInput V2 포함 (IME/커서 안정) + 모든 기존 기능 포함
 
@@ -60,7 +77,7 @@ import {
   useContractData 
 } from './ContractIntegration';
 import { WellSwapDB } from '../lib/database-wellswap'
-import { supabase } from '../lib/database-wellswap'
+import { supabase, checkUserRole } from '../lib/database-wellswap'
 import ReliabilityScore from './reliability/ReliabilityScore';
 import fulfillmentAPI from '../lib/fulfillment-api';
 import { AdminInquiryPanel } from './AdminInquiryPanel';
@@ -78,10 +95,6 @@ import { initializePerformanceMonitoring } from '../lib/performance-monitoring';
 import { initializePerformanceOptimization } from '../lib/performance-optimization';
 import { EnhancedAIValuation } from '../lib/ai-valuation-enhanced';
 import { EnhancedOCRSystem } from '../lib/ai-ocr-enhanced';
-import { initializeEmailNotification } from '../lib/email-notification';
-import AdminDashboard from './AdminDashboard';
-import MobileNavigation from './MobileNavigation';
-import { initializeMobileWalletConnect } from '../lib/mobile-wallet-connect';
 
 // 타입 정의
 type TDict = any;
@@ -155,6 +168,15 @@ type BuyPageProps = {
 // 안전한 마운트 로거 컴포넌트 (Hooks 규칙 준수)
 const MountLogger: React.FC<{ name: string }> = ({ name }) => {
   React.useEffect(() => {
+  // 유휴 시간에 헤비 컴포넌트 프리로드
+  useEffect(() => {
+    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+      (window as any).requestIdleCallback(() => {
+        import("./AdvancedOCR.tsx");
+        import("./AdminInquiryPanel.tsx");
+      });
+    }
+  }, []);
     console.log(`[${name}] MOUNT`);
     return () => console.log(`[${name}] UNMOUNT`);
   }, [name]);
@@ -1158,6 +1180,7 @@ export const InquiryPage = React.memo(function InquiryPage({
 // ✅ 메인 컴포넌트
 //
 export default function WellSwapGlobalPlatform() {
+  const [currentPage, setCurrentPage] = useState("home");
   const [currentLanguage, setCurrentLanguage] = useState("en");
 
   // 페이지 변경 함수
@@ -1198,16 +1221,16 @@ export default function WellSwapGlobalPlatform() {
     console.log('✅ AI Valuation API:', '/api/advanced-ai-valuation');
     console.log('✅ Google OAuth:', process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ? 'Configured' : 'Missing');
     
-    // 성능 모니터링 초기화 (기능 유지)
-    monitorMemoryUsage();
-    monitorNetworkPerformance();
-    monitorPageLoadPerformance();
-    startPerformanceMonitoring();
+    // 성능 모니터링 초기화 (로딩 속도 향상을 위해 일시 비활성화)
+    // monitorMemoryUsage();
+    // monitorNetworkPerformance();
+    // monitorPageLoadPerformance();
+    // startPerformanceMonitoring();
     
-    // Supabase 핑 서비스 시작 (기능 정상화)
+    // Supabase 핑 서비스 시작
     console.log('🔄 Supabase 핑 서비스 상태:', supabasePingService.getStatus());
     
-    // 웹소켓 연결 확인 (기능 정상화)
+    // 웹소켓 연결 확인
     checkWebSocketConnection().then(isConnected => {
       console.log('🌐 WebSocket 연결 상태:', isConnected ? '정상' : '오류');
     });
@@ -1225,21 +1248,7 @@ export default function WellSwapGlobalPlatform() {
     }
   }, [isWeb3Connected, connectedAccount]);
 
-  // 모바일 지갑 연결 초기화
-  useEffect(() => {
-    const mobileWallet = initializeMobileWalletConnect();
-    console.log('📱 모바일 지갑 연결 시스템 초기화 완료');
-  }, []);
 
-  // 모바일 네비게이션 핸들러
-  const handleToggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
-
-  const handlePageChange = (page: string) => {
-    setCurrentPage(page);
-    setIsMenuOpen(false);
-  };
 
   // 📊 고급 분석 엔진 초기화
   useEffect(() => {
@@ -1312,12 +1321,6 @@ export default function WellSwapGlobalPlatform() {
     processedCount: 0,
     processing: false
   });
-
-  // 관리자 대시보드 상태
-  const [showAdminDashboard, setShowAdminDashboard] = useState(false);
-  const [adminWalletAddress, setAdminWalletAddress] = useState<string>('');
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState('home');
 
   // 📸 OCR AI 상태 관리
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -1607,7 +1610,14 @@ export default function WellSwapGlobalPlatform() {
       // 1단계: MetaMask 연결
       if (!isWeb3Connected) {
         console.log('📱 MetaMask 연결 시도...');
-        await connectWeb3Wallet();
+        if (isMobile()) {
+          console.log("📱 모바일 환경 감지, 모바일 연결 사용");
+          const mobileResult = await connectMobileWallet();
+          setWeb3Account(mobileResult.account);
+          setIsWeb3Connected(mobileResult.isConnected);
+        } else {
+          await connectWeb3Wallet();
+        }
         console.log('✅ MetaMask 연결 완료');
       }
       
@@ -1630,23 +1640,37 @@ export default function WellSwapGlobalPlatform() {
         
         if (userData) {
           console.log('✅ 기존 사용자 확인:', userData);
+          // 관리자 역할 확인 및 업데이트
+          const currentRole = checkUserRole(web3Account);
+          if (userData.role !== currentRole) {
+            console.log('🔄 사용자 역할 업데이트:', userData.role, '→', currentRole);
+            const { data: updatedUser, error: updateError } = await supabase
+              .from('users')
+              .update({ role: currentRole })
+              .eq('wallet_address', web3Account.toLowerCase())
+              .select()
+              .single();
+            
+            if (updateError) {
+              console.error('역할 업데이트 오류:', updateError);
+            } else {
+              setUser(updatedUser);
+              setIsAuthenticated(true);
+              return;
+            }
+          }
           setUser(userData);
           setIsAuthenticated(true);
-          
-          // 관리자 권한 확인 및 대시보드 표시
-          if (userData.role === 'admin') {
-            setAdminWalletAddress(web3Account);
-            setShowAdminDashboard(true);
-            console.log('🛡️ 관리자 대시보드 활성화:', web3Account);
-          }
         } else {
           // 3단계: 새 사용자 생성
           console.log('🆕 새 사용자 생성 중...');
+          const userRole = checkUserRole(web3Account);
+          console.log('👤 사용자 역할:', userRole);
           const { data: newUser, error: insertError } = await supabase
             .from('users')
             .insert([{
               wallet_address: web3Account.toLowerCase(),
-              role: 'user',
+              role: userRole,
               reputation_score: 0,
               total_trades: 0,
               created_at: new Date().toISOString()
@@ -1663,13 +1687,6 @@ export default function WellSwapGlobalPlatform() {
             console.log('✅ 새 사용자 생성 완료:', newUser);
             setUser(newUser);
             setIsAuthenticated(true);
-            
-            // 관리자 권한 확인 및 대시보드 표시
-            if (newUser.role === 'admin') {
-              setAdminWalletAddress(web3Account);
-              setShowAdminDashboard(true);
-              console.log('🛡️ 관리자 대시보드 활성화:', web3Account);
-            }
           }
         }
         
@@ -1903,19 +1920,6 @@ export default function WellSwapGlobalPlatform() {
       
       if (registrationResult.success) {
         console.log('✅ 자산 등록 완료:', registrationResult);
-        
-        // 매도 등록 시 관리자에게 이메일 알림
-        const emailNotification = initializeEmailNotification();
-        await emailNotification.sendAssetRegistrationNotification({
-          assetId: registrationResult.assetId,
-          sellerAddress: connectedAccount,
-          companyName: insuranceData.company || 'Unknown',
-          productName: insuranceData.productName || 'Unknown',
-          premiumPaid: parseFloat(insuranceData.totalPayment || '0'),
-          currentValue: parseFloat(insuranceData.surrenderValue || '0'),
-          registrationTime: new Date().toISOString()
-        });
-        
         setTradeSteps(prev => ({ 
           ...prev, 
           stage: 2, 
@@ -2001,18 +2005,6 @@ export default function WellSwapGlobalPlatform() {
                 })
                 .eq('id', registrationResult.assetId);
               
-              // 이메일 알림 발송
-              const emailNotification = initializeEmailNotification();
-              await emailNotification.sendPurchaseNotification({
-                tradeId: tradeResult.tradeId,
-                assetId: registrationResult.assetId,
-                sellerAddress: connectedAccount,
-                buyerAddress: connectedAccount, // 실제로는 구매자 주소
-                purchaseAmount: agreedPriceUSD,
-                transactionHash: signResult.transactionHash,
-                purchaseTime: new Date().toISOString()
-              });
-
               alert('✅ 멀티시그 거래가 성공적으로 완료되었습니다!');
               setInsuranceData({});
               setTradeSteps({ stage: 0, registrationTxHash: '', feeTxHash: '', assetId: '' });
@@ -2100,18 +2092,6 @@ export default function WellSwapGlobalPlatform() {
               })
               .eq('id', listing?.id?.toString() || '1');
             
-            // 이메일 알림 발송
-            const emailNotification = initializeEmailNotification();
-            await emailNotification.sendPurchaseNotification({
-              tradeId: tradeResult.tradeId,
-              assetId: listing?.id?.toString() || '1',
-              sellerAddress: listing?.seller || 'unknown',
-              buyerAddress: connectedAccount,
-              purchaseAmount: totalPaymentUSD,
-              transactionHash: signResult.transactionHash,
-              purchaseTime: new Date().toISOString()
-            });
-
             alert('✅ 멀티시그 구매가 성공적으로 완료되었습니다!');
             setInsuranceData({});
             setTradeSteps({ stage: 0, registrationTxHash: '', feeTxHash: '', assetId: '' });
@@ -2461,7 +2441,6 @@ export default function WellSwapGlobalPlatform() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* 성능 최적화 상태 표시 */}
-              {/* PerformanceOptimizationStatus 컴포넌트는 일시적으로 비활성화 */}
       
       {/* Navigation */}
       <nav className="flex items-center justify-between p-6 border-b border-zinc-200 bg-white/80 backdrop-blur-md sticky top-0 z-50">
@@ -2629,25 +2608,6 @@ export default function WellSwapGlobalPlatform() {
           </div>
         </div>
       )}
-
-      {/* 🛡️ 관리자 대시보드 */}
-      {showAdminDashboard && (
-        <AdminDashboard 
-          isVisible={showAdminDashboard}
-          adminWalletAddress={adminWalletAddress}
-        />
-      )}
-
-      {/* 📱 모바일 네비게이션 */}
-      <MobileNavigation
-        currentPage={currentPage}
-        setCurrentPage={handlePageChange}
-        isAuthenticated={isAuthenticated}
-        isWeb3Connected={isWeb3Connected}
-        onConnectWallet={connectWalletWithAuth}
-        onToggleMenu={handleToggleMenu}
-        isMenuOpen={isMenuOpen}
-      />
     </div>
   );
 }
