@@ -1,6 +1,13 @@
 // pages/api/fulfillment/rankings.js
 import { FulfillmentAPI } from '../../../lib/fulfillment-api'
 
+// 정적 내보내기에서 API 라우트 사용 시 필요한 설정
+export const config = {
+  api: {
+    externalResolver: true,
+  },
+}
+
 export default async function handler(req, res) {
   // CORS 헤더 설정
   res.setHeader('Access-Control-Allow-Origin', '*')
