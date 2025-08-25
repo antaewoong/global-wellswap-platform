@@ -64,6 +64,7 @@ import { supabase } from '../lib/database-wellswap'
 import ReliabilityScore from './reliability/ReliabilityScore';
 import fulfillmentAPI from '../lib/fulfillment-api';
 import { AdminInquiryPanel } from './AdminInquiryPanel';
+import { performClientSideAIValuation } from '../lib/ai-valuation-client';
 
 // 타입 정의
 type TDict = any;
