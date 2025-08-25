@@ -178,20 +178,25 @@ async function handleDocumentRequest(request) {
 
 // 기타 요청 처리 (stale-while-revalidate)
 async function handleOtherRequest(request) {
-  const cachedResponse = await caches.match(request);
-  
-  const fetchPromise = fetch(request).then(async (networkResponse) => {
-    if (networkResponse.ok) {
-      const cache = await caches.open(DYNAMIC_CACHE);
-      cache.put(request, networkResponse.clone());
-    }
-    return networkResponse;
-  }).catch(() => {
-    // 네트워크 실패 시 캐시된 응답 반환
-    return cachedResponse;
-  });
-  
-  return cachedResponse || fetchPromise;
+  try {
+    const cachedResponse = await caches.match(request);
+    
+    const fetchPromise = fetch(request).then(async (networkResponse) => {
+      if (networkResponse.ok) {
+        const cache = await caches.open(DYNAMIC_CACHE);
+        cache.put(request, networkResponse.clone());
+      }
+      return networkResponse;
+    }).catch(() => {
+      // 네트워크 실패 시 캐시된 응답 반환
+      return cachedResponse;
+    });
+    
+    return cachedResponse || fetchPromise;
+  } catch (error) {
+    console.error('Request handling error:', error);
+    return new Response('Service Unavailable', { status: 503 });
+  }
 }
 
 // 정적 파일 여부 확인

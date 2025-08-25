@@ -81,11 +81,11 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
         
-        {/* PWA Service Worker 등록 */}
+        {/* PWA Service Worker 등록 (개발 환경에서는 비활성화) */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              if ('serviceWorker' in navigator) {
+              if ('serviceWorker' in navigator && window.location.hostname !== 'localhost') {
                 window.addEventListener('load', function() {
                   navigator.serviceWorker.register('/sw.js')
                     .then(function(registration) {
