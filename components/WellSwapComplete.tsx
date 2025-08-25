@@ -1198,19 +1198,19 @@ export default function WellSwapGlobalPlatform() {
     console.log('✅ AI Valuation API:', '/api/advanced-ai-valuation');
     console.log('✅ Google OAuth:', process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ? 'Configured' : 'Missing');
     
-    // 성능 모니터링 초기화 (오류 방지를 위해 완전 비활성화)
-    // monitorMemoryUsage();
-    // monitorNetworkPerformance();
-    // monitorPageLoadPerformance();
-    // startPerformanceMonitoring();
+    // 성능 모니터링 초기화 (기능 유지)
+    monitorMemoryUsage();
+    monitorNetworkPerformance();
+    monitorPageLoadPerformance();
+    startPerformanceMonitoring();
     
-    // Supabase 핑 서비스 시작 (오류 방지를 위해 비활성화)
-    // console.log('🔄 Supabase 핑 서비스 상태:', supabasePingService.getStatus());
+    // Supabase 핑 서비스 시작 (기능 정상화)
+    console.log('🔄 Supabase 핑 서비스 상태:', supabasePingService.getStatus());
     
-    // 웹소켓 연결 확인 (오류 방지를 위해 비활성화)
-    // checkWebSocketConnection().then(isConnected => {
-    //   console.log('🌐 WebSocket 연결 상태:', isConnected ? '정상' : '오류');
-    // });
+    // 웹소켓 연결 확인 (기능 정상화)
+    checkWebSocketConnection().then(isConnected => {
+      console.log('🌐 WebSocket 연결 상태:', isConnected ? '정상' : '오류');
+    });
     
     // 실제 연동 테스트
     if (isWeb3Connected && connectedAccount) {

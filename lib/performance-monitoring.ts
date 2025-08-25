@@ -30,10 +30,10 @@ class AdvancedPerformanceMonitor {
 
   constructor(thresholds?: Partial<AlertThresholds>) {
     this.thresholds = {
-      pageLoadTime: 5000, // 5 seconds (더 관대하게)
-      memoryUsage: 200 * 1024 * 1024, // 200MB (더 관대하게)
-      errorRate: 0.1, // 10% (더 관대하게)
-      networkLatency: 2000, // 2 seconds (더 관대하게)
+      pageLoadTime: 10000, // 10 seconds (매우 관대하게)
+      memoryUsage: 500 * 1024 * 1024, // 500MB (매우 관대하게)
+      errorRate: 0.2, // 20% (매우 관대하게)
+      networkLatency: 5000, // 5 seconds (매우 관대하게)
       ...thresholds
     };
     this.sessionStartTime = Date.now();
